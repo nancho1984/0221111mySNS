@@ -17,8 +17,11 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
+    
+    //入力可能なカラムの指定
     protected $fillable = [
         'name',
+        'image',
         'email',
         'password',
     ];
@@ -41,4 +44,16 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    
+    //Postに対するリレーション, user:posts=>1:多
+    public function posts()
+    {
+        return $this -> hasMany(Post::class);
+    }
+    
+    //Commentに対するリレーション, user:comments=>1:多
+    public function comments()
+    {
+        return $this -> hasMany(Comment::class);
+    }
 }
