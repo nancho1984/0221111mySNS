@@ -19,15 +19,18 @@ return new class extends Migration
             $table->string('body', 500);
             $table->foreignId('user_id')->constrained()->nullable;
             $table->string('image')->nullable();
-            $table->string('tag1',10)->nullable();
-            $table->string('tag2',10)->nullable();
-            $table->string('tag3',10)->nullable();
-            $table->string('tag4',10)->nullable();
-            $table->string('tag5',10)->nullable();
+            $table->string('tag1',20)->nullable();
+            $table->string('tag2',20)->nullable();
+            $table->string('tag3',20)->nullable();
+            $table->string('tag4',20)->nullable();
+            $table->string('tag5',20)->nullable();
+            $table->softDeletes();
             $table->timestamps();
             
-            //外部キー参照
-            
+            //検索用インデックス
+            $table->index('id');
+            $table->index('user_id');
+            $table->index('body');
         });
     }
 

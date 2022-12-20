@@ -156,6 +156,9 @@ return [
 
     'providers' => [
 
+        //外部
+        CloudinaryLabs\CloudinaryLaravel\CloudinaryServiceProvider::class,
+        
         /*
          * Laravel Framework Service Providers...
          */
