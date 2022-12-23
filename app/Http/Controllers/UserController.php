@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Requests\ProfileRequest;
 use App\Models\Follow;
 use App\Models\Post;
 use App\Models\User;
@@ -25,4 +26,95 @@ class UserController extends Controller
             'followers_count' => $followers_count,
             ]);
     }
+
+    public function editProfile(User $user)
+    {
+        return view('edit_profile')->with(['user' => $user]);
+    }
+    
+    public function update(Request $request, User $user)
+    {
+        
+        //dd($request->all());
+        //dd($request['profile.image']);
+        
+        //ユニークをうまくProfileRequestの中で書けないので
+        //コントローラーでバリデーションしてる
+        $request->validate([
+            
+            'profile.image'=> 'max:1100|mimes:jpeg,png,jpg,gif',
+            
+            /**
+             * uniqueは
+             * "1.ユニークチェックしたいテーブル", "2.チェックしたいカラム名"
+             * "3.チェック対象外にしたいレコードの主キー", "4.対象外にしたいレコードの主キーカラム名"
+             */
+            'profile.addressname' => 'required|max:100|unique:users,addressname, '.$user->id.',id',
+            'profile.nickname' => 'required|max:100',
+            'profile.profile_sentence' => 'max:5000',
+        ],
+        [
+            'required' => ":attributeは必須項目です。",
+            'mimes' => "指定された拡張子(PNG/JPG/GIF)ではありません。",
+            'profile.image.max' => "画像のファイルサイズが1MBを超えています。",
+            'profile.addressname.unique' => "このユーザーIDはすでに使用されています。"
+        ]);
+        
+        //request[]でDBから「型(キー)」をもらってinputをつめる
+        //[user]配列はlaravelくん(多分Breeze)がすでに使っているので[profile]
+        $input = $request['profile'];
+        //dd($request['profile']);
+        
+        $user->fill($input);
+        
+        //画像が入っている＝新しい画像に変更されたときのみ保存
+        if($request['profile.image'])
+        {
+            $user->image = Cloudinary::upload($request->file('image')->getRealPath())->getSecurePath();
+        }
+        
+        //ポストを保存
+        $user->save();
+        
+        
+        return redirect('/users/' . $user->id);
+    }
+    
+    /**
+     * follower：フォロー「する」
+     * followee：フォロー「される」
+     */
+    public function follow(Request $request, Follow $follow, User $user)
+    {
+        $following_user = auth()->id();
+        $followed_user = $user->id;
+        
+        //自分だったらフォローさせない
+        if($following_user != $followed_user){
+            
+            //dd($follow);
+            $follow->following_user_id = auth()->id();
+            $follow->followed_user_id = $user->id;
+        
+            $follow->save();
+        }
+        
+        return back();
+    }
+    
+    public function unfollow(Request $request, Follow $follow, User $user)
+    {
+        $user_id = auth()->id();
+        $followed_user_id = $user->id;
+        //dd($user_id);
+        //dd($post_id);
+        $follow = Follow::where('following_user_id', $user_id)->where('followed_user_id', $followed_user_id)->first();
+        
+        //dd($follow);
+        
+        $follow->delete();
+        
+        return back();
+    }
+    
 }

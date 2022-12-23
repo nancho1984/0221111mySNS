@@ -22,7 +22,7 @@
             <h2>新着</h2>
             @foreach ($posts as $post)
             <div class='post'>
-                <a href="/users/{{ $post->user->id }}">＠{{ $post->user->name }}</a>
+                <a href="/users/{{ $post->user->id }}">{{ $post->user->nickname }}</a>
                 <!-- 画像のサイズ調整すること-->
                 <div class='image'>
                     <img src="{{ $post->image }}">

@@ -9,13 +9,22 @@
         <form method="POST" action="{{ route('register') }}">
             @csrf
 
-            <!-- Name -->
+            <!-- AdressName -->
             <div　class="mt-4">
-                <x-input-label for="name" :value="__('アカウントID')" />
+                <x-input-label for="addressname" :value="__('アカウントID')" />
 
-                <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus />
+                <x-text-input id="addressname" class="block mt-1 w-full" type="text" name="addressname" :value="old('addressname')" required autofocus />
 
-                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                <x-input-error :messages="$errors->get('addressname')" class="mt-2" />
+            </div>
+            
+            <!-- NickName -->
+            <div　class="mt-4">
+                <x-input-label for="nickname" :value="__('ニックネーム')" />
+
+                <x-text-input id="nickname" class="block mt-1 w-full" type="text" name="nickname" :value="old('nickname')" required autofocus />
+
+                <x-input-error :messages="$errors->get('nickname')" class="mt-2" />
             </div>
 
             <!-- Email Address -->

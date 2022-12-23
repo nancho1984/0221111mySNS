@@ -16,7 +16,7 @@ return new class extends Migration
         //user_idもnullableにしてるので後で再確認のほどよろしく
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
-            $table->string('body', 500);
+            $table->string('body', 500)->nullable;
             $table->foreignId('user_id')->constrained()->nullable;
             $table->string('image')->nullable();
             $table->string('tag1',20)->nullable();

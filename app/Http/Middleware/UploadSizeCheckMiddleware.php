@@ -24,7 +24,7 @@ class UploadSizeCheckMiddleware
             $uploaded_size = intval($_SERVER['CONTENT_LENGTH']);
             
             if($post_max_size < $uploaded_size){
-                return back()->with('imagesize_error', 'ファイルサイズが大きすぎます。');
+                return back();
             }
         }
         

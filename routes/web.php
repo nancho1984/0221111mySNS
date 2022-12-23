@@ -38,10 +38,14 @@ Route::group(['middleware' => ['auth']], function(){
     //いいね
     Route::get('/posts/like/{post}', [LikeController::class, 'like'])->name('like');
     Route::get('/posts/unlike/{post}', [LikeController::class, 'unlike'])->name('unlike');
-
-    //フォロー
-    Route::get('/users/follow/{user}', [FollowController::class, 'follow'])->name('follow');
-    Route::get('/users/unfollow/{user}', [FollowController::class, 'unfollow'])->name('unfollow');
+    
+    //ユーザー
+    Route::get('/users/follow/{user}', [UserController::class, 'follow'])->name('follow');
+    Route::get('/users/unfollow/{user}', [UserController::class, 'unfollow'])->name('unfollow');
+    Route::get('/users/{user}/edit', [UserController::class, 'editProfile'])->name('edit_profile');
+    Route::put('/users/{user}/update', [UserController::class, 'update']);
+    Route::get('/users/{user}/notice/get', [UserController::class, 'getNotice'])->name('get_notice');
+    Route::put('/users/{user}/notice/checked', [UserController::class, 'checkedNotice'])->name('checked_notice');
 
 });
 
@@ -50,7 +54,7 @@ Route::group(['middleware' => ['auth']], function(){
  * いつでもアクセスできるやつ
  */
 //ポスト
-Route::get('/', [PostController::class, 'showHome'])->name('home');
+Route::get('/', [PostController::class, 'showTop'])->name('top');
 Route::get('/posts/likes/user={user}', [PostController::class, 'showPostsLiked'])->name('postsliked');
 Route::get('/posts/user={user}', [PostController::class, 'showUsersPosts'])->name('users_posts');
 Route::get('/posts/{post}', [PostController::class, 'showPost']);
@@ -63,7 +67,8 @@ Route::get('/users/follows/{user}', [FollowController::class, 'show_followusers'
 Route::get('/users/followers/{user}', [FollowController::class, 'show_followers'])->name('show_followers');
 
 //ユーザー
-Route::get('/users/{user}', [UserController::class, 'showProfile']);
+Route::post('/users', [UserController::class, 'store'])->name('store_user');
+Route::get('/users/{user}', [UserController::class, 'showProfile'])->name('show_Profile');
 
 //上のバー
 Route::get('/dashboard', function () {
