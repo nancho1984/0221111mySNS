@@ -9,6 +9,17 @@
     <body>
         <h1>kitemite</h1>
         <h2>新規投稿</h2>
+        <!--エラー文-->
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+                </ul>
+            </div>
+        @endif
+        
         <form action="/posts" method="POST" enctype="multipart/form-data">
             @csrf
             <!--ここのエラー治ったらプロフ画像も直して-->
@@ -18,30 +29,27 @@
                     type="file"
                     name="post[image]"
                     accept=".gif, .jpg, .png">
-                    
-                    <p class="image__error" style="color:red">{{ $errors->first('post.image') }}</p>
             </div>
             
             <div class="items">
                 <!-- アイテムを追加ボタンを押したら、次のフォームが出るようにすること-->
                 <p>アイテム</p>
                 <p>使用したアイテムだけでなく、参考にしたサイトのURLもあると、他の人も参考にしやすい投稿になります！</p>
-                <input type="text" name="items[URL][0]" placeholder="アイテムのURL" /><br>
-                <input type="text" name="items[URL][1]" placeholder="アイテムのURL" /><br>
-                <input type="text" name="items[URL][2]" placeholder="アイテムのURL" /><br>
-                <input type="text" name="items[URL][3]" placeholder="アイテムのURL" /><br>
-                <input type="text" name="items[URL][4]" placeholder="アイテムのURL" /><br>
-                <input type="text" name="items[URL][5]" placeholder="アイテムのURL" /><br>
-                <input type="text" name="items[URL][6]" placeholder="アイテムのURL" /><br>
-                <input type="text" name="items[URL][7]" placeholder="アイテムのURL" /><br>
-                <input type="text" name="items[URL][8]" placeholder="アイテムのURL" /><br>
-                <input type="text" name="items[URL][9]" placeholder="アイテムのURL" /><br>
+                <input type="text" name="items[URL][0]" placeholder="アイテムのURL" value="{{ old('items.URL.0') }}"/><br>
+                <input type="text" name="items[URL][1]" placeholder="アイテムのURL" value="{{ old('items.URL.1') }}"/><br>
+                <input type="text" name="items[URL][2]" placeholder="アイテムのURL" value="{{ old('items.URL.2') }}"/><br>
+                <input type="text" name="items[URL][3]" placeholder="アイテムのURL" value="{{ old('items.URL.3') }}"/><br>
+                <input type="text" name="items[URL][4]" placeholder="アイテムのURL" value="{{ old('items.URL.4') }}"/><br>
+                <input type="text" name="items[URL][5]" placeholder="アイテムのURL" value="{{ old('items.URL.5') }}"/><br>
+                <input type="text" name="items[URL][6]" placeholder="アイテムのURL" value="{{ old('items.URL.6') }}"/><br>
+                <input type="text" name="items[URL][7]" placeholder="アイテムのURL" value="{{ old('items.URL.7') }}"/><br>
+                <input type="text" name="items[URL][8]" placeholder="アイテムのURL" value="{{ old('items.URL.8') }}"/><br>
+                <input type="text" name="items[URL][9]" placeholder="アイテムのURL" value="{{ old('items.URL.9') }}"/><br>
             </div>
             
             <div class="body">
                 <p>説明</p>
                 <textarea name="post[body]" placeholder="&#40;500字まで&#41;">{{ old('post.body')}}</textarea>
-                <p class="body__error" style="color:red">{{ $errors->first('post.body') }}</p>
             </div>
             <div class="tags">
                 <p>タグ</p>
@@ -51,11 +59,6 @@
                 <input type="text" name="post[tag3]" placeholder="タグ3&#40;20字まで&#41;" value="{{ old('post.tag3') }}"/>
                 <input type="text" name="post[tag4]" placeholder="タグ4&#40;20字まで&#41;" value="{{ old('post.tag4') }}"/>
                 <input type="text" name="post[tag5]" placeholder="タグ5&#40;20字まで&#41;" value="{{ old('post.tag5') }}"/>
-                <p class="tag1__error" style="color:red">{{ $errors->first('post.tag1') }}</p>
-                <p class="tag2__error" style="color:red">{{ $errors->first('post.tag2') }}</p>
-                <p class="tag3__error" style="color:red">{{ $errors->first('post.tag3') }}</p>
-                <p class="tag4__error" style="color:red">{{ $errors->first('post.tag4') }}</p>
-                <p class="tag5__error" style="color:red">{{ $errors->first('post.tag5') }}</p>
             </div>
             <!--下書き保存作れたらいいな…-->
             <input type="submit" value="投稿する"/>

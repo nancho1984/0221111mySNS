@@ -22,9 +22,11 @@ class User extends Authenticatable
     
     //入力可能なカラムの指定
     protected $fillable = [
-        'name',
+        'addressname',
+        'nickname',
         'image',
         'email',
+        'profile_sentence',
         'password',
     ];
 

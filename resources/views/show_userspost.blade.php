@@ -10,7 +10,7 @@
     </head>
     <body>
         <h1>Kitemite</h1>
-        <h2>＠{{$user->name}}のプロフィール</h2>
+        <h2>{{$user->nickname}}のプロフィール</h2>
         
         <div class='image'>
             <img src="{{ $user->image }}">
