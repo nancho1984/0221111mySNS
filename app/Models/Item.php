@@ -20,6 +20,7 @@ class Item extends Model
     //Postsに対するリレーション, items:posts =>多:多
     public function Posts()
     {
-        return $this->belongsToMany(Post::class);
+        return $this->belongsToMany(Post::class)
+                ->withTimestamps();
     }
 }

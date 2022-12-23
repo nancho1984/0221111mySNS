@@ -15,62 +15,102 @@ return new class extends Migration
      */
     public function up()
     {
-        //コメントテーブル
+        //コメントテーブル--------
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->nullable;
+            $table->foreignId('user_id')->constrained();
             $table->string('body', 200);
+            $table->unsignedBigInteger('parent_post_id')->nullable();
+            $table->unsignedBigInteger('reply_user_id')->nullable();
+            $table->softDeletes();
             $table->timestamps();
-            //ポストidを参照し、参照先がnullになればnullを設定し、自身はnullable
-            $table->unsignedBigInteger('parent_post_id')->references('id')->on('posts')
-                ->onUpdate('CASCADE')->onDelete('SET NULL')
-                ->nullable;
-            //コメントidで自分自身を参照させ、参照先がnullになればnull設定、自身はnullable
-            $table->unsignedBigInteger('parent_comment_id')->references('id')->on('comments')
-                ->onUpdate('CASCADE')->onDelete('SET NULL')
-                ->nullable;
-            $table->unsignedBigInteger('child_comment_id')->references('id')->on('comments')
-                ->onUpdate('CASCADE')->onDelete('SET NULL')
-                ->nullable;
+            
+            //検索用インデックス
+            $table->index('id');
+            $table->index('user_id');
+            $table->index('parent_post_id');
+            $table->index('reply_user_id');
+            
+            //外部キー参照
+            $table->foreign('parent_post_id')
+                ->references('id')
+                ->on('posts')
+                ->onUpdate('CASCADE');
+                
+            $table->foreign('reply_user_id')
+                ->references('id')
+                ->on('users')
+                ->onUpdate('CASCADE');
         });
      
-        //アイテムテーブル
+     
+        //アイテムテーブル--------
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->string('URL', 1000);
+            $table->string('URL', 500)->unique();
+            //タイムスタンプをつけようとした。消してもいいっちゃいい
             $table->timestamps();
+            $table->softDeletes();
+            
+            //検索用インデックス
+            $table->index('id');
+            $table->index('URL');
         });
      
-        //フォローテーブル
+    
+        //フォローテーブル--------
         Schema::create('follows', function (Blueprint $table) {
-            //user_idを参照し、参照先がnullになればnullを設定し、自身はnullable
-            $table->unsignedBigInteger('Follower_id')->references('id')->on('users')
-                ->onUpdate('CASCADE')->onDelete('SET NULL')
-                ->nullable;
-            $table->unsignedBigInteger('Followee_id')->references('id')->on('users')
-                ->onUpdate('CASCADE')->onDelete('SET NULL')
-                ->nullable;
+            $table->id();
+            $table->unsignedBigInteger('following_user_id');
+            $table->unsignedBigInteger('followed_user_id');
+            $table->softDeletes();
             $table->timestamps();
-            //主キー設定
-            $table->primary(['Follower_id', 'Followee_id']);
+            
+            //検索用インデックス
+            $table->index('id');
+            $table->index('following_user_id');
+            $table->index('followed_user_id');
+            
+            //外部キー参照
+            $table->foreign('following_user_id')
+                ->references('id')
+                ->on('users')
+                ->onUpdate('CASCADE');
+            $table->foreign('followed_user_id')
+                ->references('id')
+                ->on('users')
+                ->onUpdate('CASCADE');
         });
+        
      
-        //いいねテーブル
+        //いいねテーブル--------
         Schema::create('likes', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('user_id')->constrained()->nullable;
             $table->foreignId('post_id')->constrained()->nullable;
+            $table->softDeletes();
             $table->timestamps();
-            //主キー設定
-            $table->primary(['user_id', 'post_id']);
+            
+            //検索用インデックス
+            $table->index('id');
+            $table->index('user_id');
+            $table->index('post_id');
         });
+        
      
-        //アイテムと投稿の中間テーブル
+        //アイテムと投稿の中間テーブル--------
         Schema::create('item_post', function (Blueprint $table) {
             $table->foreignId('item_id')->constrained()->nullable;
             $table->foreignId('post_id')->constrained()->nullable;
+            $table->softDeletes();
             $table->timestamps();
+            
             //主キー設定
             $table->primary(['item_id', 'post_id']);
+            
+            //検索用インデックス
+            $table->index('item_id');
+            $table->index('post_id');
         });
     }
 

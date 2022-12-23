@@ -20,20 +20,20 @@ class PostSeeder extends Seeder
     public function run()
     {
         // 1レコード
-        DB::table('posts')->insert([
-            'body' => 'first post',
-            'user_id' => 1,
-            'image' => 'imagetitle_1',
-            'tag1' => 'ゴスロリ',
-            'tag2' => '自作',
-            'tag3' => 'ちと',
-            'tag4' => '地雷系',
-            'tag5' => 'ピアス',
-            'created_at' => new DateTime(),
-            'updated_at' => new DateTime(),
-        ]);
+        //DB::table('posts')->insert([
+            //'body' => 'first post',
+            //'user_id' => 1,
+            //'image' => 'imagetitle_1',
+            //'tag1' => 'ゴスロリ',
+            //'tag2' => '自作',
+            //'tag3' => 'ちと',
+            //'tag4' => '地雷系',
+            //'tag5' => 'ピアス',
+            //'created_at' => new DateTime(),
+            //'updated_at' => new DateTime(),
+        //]);
         
-        //factory10こ
+        //factory10こ 
         Post::factory()->count(10)->create();
     }
 }
