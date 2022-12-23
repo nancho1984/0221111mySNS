@@ -10,16 +10,22 @@
     </head>
     <body>
         <h1>Kitemite</h1>
-        @if($user)
-            <a href="/posts/create">新規投稿</a>
-            <a href="/users/ {{$user->id}}">マイページ</a>
-        @else
-            <a href="/register">新規登録</a>
-            <a href="/login">ログイン</a>
-        @endif
+        
+        <!--検索フォーム-->
+        <form method="GET" action="{{ route('search_posts') }}">
+            <input type="search" placeholder="コーデで検索" name="search_posts" value="@if (isset($search)) {{ $search }} @endif">
+            <div>
+                <button type="submit">検索</button>
+                <button>
+                    <a href="{{ route('search_posts') }}" class="text-white">
+                        クリア
+                    </a>
+                </button>
+            </div>
+        </form>
         
         <div class='posts'>
-            <h2>新着</h2>
+            <h2>{{ $searchPhrase }}</h2>
             @foreach ($posts as $post)
             <div class='post'>
                 <a href="/users/{{ $post->user->id }}">{{ $post->user->nickname }}</a>

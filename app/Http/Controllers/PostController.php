@@ -12,13 +12,14 @@ use App\Models\Item;
 use App\Models\Like;
 
 use App\Http\Requests\PostRequest;
+use App\Http\Requests\PostUpdateRequest;
 use Cloudinary;
 
 class PostController extends Controller
 {
 
     
-    public function showHome(Post $post, User $user)
+    public function showTop(Post $post, User $user)
     {
         //blade内で使う変数'posts'と設定。'posts'の中身にgetを使い、インスタンス化した$postを代入。
         //getPaginateByLimit()はpost.php参照
@@ -99,8 +100,8 @@ class PostController extends Controller
     
     public function store(PostRequest $request, Post $post, Item $item)
     {
-        dd($request->all());
         
+        //dd($request->all());
         
         //request[]でDBから「型(キー)」をもらってinputをつめる
         $input_post = $request['post'];
@@ -146,43 +147,92 @@ class PostController extends Controller
     
     public function edit(Post $post)
     {
-        return view('edit')->with(['post' => $post]);
+        //Itemをよぶ
+        $items = $post->items;
+        //dd($items);
+        
+        return view('edit')->with([
+            'post' => $post,
+            'items' => $items,
+            ]);
     }
     
-    public function update(PostRequest $request, Post $post)
+    public function update(PostUpdateRequest $request, Post $post)
     {
-        $input = $request['post'];
+        //dd($request->all());
+        $input = $request['postupdate'];
         $input_URLs = $request['items']['URL'];
-        //これも同じものならアップロード止めたい
-        $post->image = Cloudinary::upload($request->file('image')->getRealPath())->getSecurePath();
-        $post->user_id = auth()->id();
-        $post->fill($input)->save();
         
-        //インプット内のそれぞれのURLに対して作業
-        foreach($input_URLs as $input_URL){
-            //値はあるかチェック
-            if(empty($input_URL)){
+        //もともとあったURLをしらべる
+        $DBURLs = $post->items()->get(["URL"]);
+        //dd($DBURLs);
+        
+        $post->fill($input);
+        
+        //画像が入っている＝新しい画像に変更されたときのみ保存
+        //dd($request->file('postupdate.image'));
+        if($request->file('postupdate.image'))
+        {
+            $post->image = Cloudinary::upload($request->file('postupdate.image')->getRealPath())->getSecurePath();
+        }
+        
+        //dd($post->image);
+        $post->user_id = auth()->id();
+        $post->save();
+        
+        
+        //アイテムの保存について
+        //前までに保存されてるURLをとってくる
+        $before_URLs = [];
+        foreach($DBURLs as $DBURL)
+        {
+            array_push($before_URLs, $DBURL->URL); 
+        }
+        //dd($before_URLs);
+        
+        
+        /**
+         * このforeachでやること：前にあったけど今ないやつを削除する。
+         * 
+         * array_diff(前回のURL配列 - 今回のURL配列(input) = 「前回」はあったけど今回はなくなったURL)
+         */
+        foreach(array_diff($before_URLs, $input_URLs) as $deleted_URL)
+        {
+            //getだとコレクションになってしまう
+            $deleted_item = Item::where('URL', $deleted_URL)->first();
+            //dd($deleted_item);
+            $deleted_item->Posts()->detach($post->id);
+        }
+        
+        /**
+         * このforeachでやること：前なかったやつを登録する。
+         * 
+         * Itemsに登録されて「ない」ときは、Itemsに登録、関係も登録(中間テーブル)。
+         * Itemsに登録されて「いる」ときは、関係だけ登録。
+         * 
+         * array_diff(今回のURL配列(input) - 前回のURL配列 = 前回はなかったけど「今回」はあるURL)
+         */
+        foreach(array_diff($input_URLs, $before_URLs) as $new_URL)
+        {
+            //dd($new_URL);
+            //URLはすでにItemテーブルに存在するか？
+            if(Item::where('URL', $new_URL)->exists())
+            {
                 
             } else {
-                //URLの重複チェック。すでにある時は保存しない
-                if (Item::where('URL', $input_URL)->exists()){
-            
-                } else {
                     //保存。fillだと一個しか登録できない
-                    Item::create(['URL'=>$input_URL]);
-                }
+                    Item::create(['URL'=>$new_URL]);
         
-                //中間テーブルに保存
-                //まずitemのidをとってくる。
-                //もしも複数同じものがあった時エラーを起こさない用firstメソッド
-                //attachはダブりあり、syncは同じidの結びつきは一個だけ
-                $item_withid = Item::where('URL', $input_URL)->first();
-                //itemに結びついたpostのidを呼んで、入れてsyncで保存
-                $item_withid->Posts()->attach($post->id);   
+                    //中間テーブルに保存
+                    //まずitemのidをとってくる。
+                    //もしも複数同じものがあった時エラーを起こさない用firstメソッド
+                    //attachはダブりあり、syncは同じidの結びつきは一個だけ
+                    $item_withid = Item::where('URL', $new_URL)->first();
+                    //itemに結びついたpostのidを呼んで、入れてsyncで保存
+                    $item_withid->Posts()->attach($post->id); 
             }
-         
         }
-
+        
         return redirect('/posts/' . $post->id);
     }
     

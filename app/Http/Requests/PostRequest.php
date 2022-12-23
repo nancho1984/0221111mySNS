@@ -15,9 +15,7 @@ class PostRequest extends FormRequest
     {
         
         return [
-            'post.body' => 'required|max:500',
-            //mimes:jpeg,png,jpg,gif,軽い画像いける、でも重い画像むり(3GB以上くらい)、バリデーション効いてない
-            //Call to a member function getRealPath() on null
+            'post.body' => 'max:500',
             'post.image'=> 'required|max:1024|mimes:jpeg,png,jpg,gif',
             'post.tag1' => 'max:20',
             'post.tag2' => 'max:20',
@@ -28,19 +26,20 @@ class PostRequest extends FormRequest
     }
     
     
-    public function messages()
+public function messages()
     {
-        //文字制限とサイズ制限がごっちゃになってるので調整して
+ 
         return [
-            'required' => "必須項目です。",
+            'required' => ":attributeは必須項目です。",
             'mimes' => "指定された拡張子(PNG/JPG/GIF)ではありません。",
-            'post.image.max' => "ファイルサイズ上限の1MBを超えています",
-            'post.body.max' => "規定の文字数を超えています。",
-            'post.tag1.max' => "規定の文字数を超えています。",
-            'post.tag2.max' => "規定の文字数を超えています。",
-            'post.tag3.max' => "規定の文字数を超えています。",
-            'post.tag4.max' => "規定の文字数を超えています。",
-            'post.tag5.max' => "規定の文字数を超えています。",
+            'post.image.max' => "画像のファイルサイズが1MBを超えています",
+            'post.body.max' => "説明文が500文字を超えています。",
+            'post.tag1.max' => "タグが20文字を超えています。",
+            'post.tag2.max' => "タグが20文字を超えています。",
+            'post.tag3.max' => "タグが20文字を超えています。",
+            'post.tag4.max' => "タグが20文字を超えています。",
+            'post.tag5.max' => "タグが20文字を超えています。",
         ];
     }
+
 }

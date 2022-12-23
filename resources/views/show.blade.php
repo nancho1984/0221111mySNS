@@ -15,7 +15,7 @@
     <body>
         <h1>Kitemite</h1>
         <h3 class="username">
-            <a href="/users/{{ $user->id }}">＠{{ $user->name }}</a>
+            <a href="/users/{{ $user->id }}">{{ $user->nickname }}</a>
         </h3>
         
         <!--followボタン-->
@@ -65,7 +65,7 @@
                 @endif
             </span>
         <!-- 見ているユーザーが本人か確認 -->
-                @if($user->they_isnt_auth_user())
+                @if(!($user->they_isnt_auth_user()))
                     <div class="edit">
                         <a href="/posts/{{ $post->id }}/edit">編集する</a>
                     </div>
@@ -134,11 +134,11 @@
             @if($comments)
             
                 @foreach ($comments as $comment)
-                    <p>＠{{ $comment->user->name }}</p>
+                    <p>{{ $comment->user->nickname }}</p>
                     
                     <!--リプライとなっているか-->
                     @if($comment->reply_user_id)
-                        To＠{{ $comment->reply_user->name }}
+                        To＠{{ $comment->reply_user->addressname }}
                     @endif
                     
                     {{ $comment->body }}
