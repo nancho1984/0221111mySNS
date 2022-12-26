@@ -97,6 +97,8 @@ class UserController extends Controller
             $follow->followed_user_id = $user->id;
         
             $follow->save();
+            //フォローした通知を出すための呼び出し
+            NotificationController::follow_notice($follow);
         }
         
         return back();
@@ -112,9 +114,63 @@ class UserController extends Controller
         
         //dd($follow);
         
+        //通知を消す用(既読済みなら消さない)
+        NotificationController::delete_follow_notice($follow);
+        
         $follow->delete();
         
         return back();
+    }
+    
+    /**
+     * 投稿を検索ボックスで検索するやつ
+     */
+    public function searchbarUsers(Request $request)
+    {
+        if(!($request->filled('search_users')))
+        {
+            return back();
+        }
+        
+        $users = User::paginate(30);
+        $search = $request->input('search_users');
+        
+        //検索フォームに値がある(入力されてる)かどうか
+        if($search)
+        {
+            //全角スペースを半角スペースに変換
+            $searchPhrase = mb_convert_kana($search, 's');
+            
+            //単語を半角スペースずつで配列化する
+            //"三島 美輪明宏 肩パッド"を["三島", "美輪明宏", "肩パッド"]に
+            $searchWords = preg_split('/[\s,]+/', $searchPhrase, -1, PREG_SPLIT_NO_EMPTY);
+            
+             //カラ配列作る
+            $hit_ids=array();
+            
+            //dd($searchWords);
+            //単語ずつで検索
+            foreach($searchWords as $key=>$word)
+            {
+                
+                //if($key===1) dd($query->get());
+                
+                //LIKE検索、本文、タグ
+                $result=User::where('addressname', 'LIKE', '%'.$word.'%')
+                    ->orwhere('nickname', 'LIKE', '%'.$word.'%')
+                    ->orwhere('profile_sentence', 'LIKE', '%'.$word.'%')
+                    ->pluck('id')->toArray();
+                
+                //見つかったidの配列を、unpackして$hit_idに格納
+                array_push($hit_ids, ...$result);
+            }
+            
+            //$hit_idsで見つけたidを全検索する。
+            $users= User::whereIn('id', $hit_ids)->paginate(30);
+        }
+        
+        //dd($searchPhrase);
+        return view('search_users',compact('searchPhrase', 'users'));
     }
     
 }

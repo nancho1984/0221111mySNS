@@ -14,13 +14,35 @@ return new class extends Migration
     public function up()
     {
         Schema::create('notifications', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
+            //通知を受ける人のユーザーID
+            $table->unsignedBigInteger('user_id');
             $table->string('type');
-            //morphs('〇〇able')でidとtype両方作ってくれる
-            $table->morphs('notifiable');
-            $table->text('data');
+            $table->bigInteger('type_id');
+            //agent_id : コメントやいいねをしてくれたユーザーのID
+            $table->unsignedBigInteger('agent_id');
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
+            
+            //検索用インデックス
+            $table->index('id');
+            $table->index('user_id');
+            $table->index('type');
+            $table->index('type_id');
+            $table->index('agent_id');
+            $table->index('read_at');
+            
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('users')
+                ->onUpdate('CASCADE');
+                
+            $table->foreign('agent_id')
+                ->references('id')
+                ->on('users')
+                ->onUpdate('CASCADE');
+            
         });
     }
 

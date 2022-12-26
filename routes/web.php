@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\FollowController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,8 +20,10 @@ use App\Http\Controllers\CommentController;
 */
 
 /**
+ * ----------------------------------
  * 認証してないとアクセスできないやつ
  * 主に投稿系
+ * ----------------------------------
  */
 Route::group(['middleware' => ['auth']], function(){
     
@@ -44,31 +47,47 @@ Route::group(['middleware' => ['auth']], function(){
     Route::get('/users/unfollow/{user}', [UserController::class, 'unfollow'])->name('unfollow');
     Route::get('/users/{user}/edit', [UserController::class, 'editProfile'])->name('edit_profile');
     Route::put('/users/{user}/update', [UserController::class, 'update']);
-    Route::get('/users/{user}/notice/get', [UserController::class, 'getNotice'])->name('get_notice');
-    Route::put('/users/{user}/notice/checked', [UserController::class, 'checkedNotice'])->name('checked_notice');
+    
+    //[通知]
+    //通知をみせるとき
+    Route::get('/notifications/{user}', [NotificationController::class, 'showNotices'])->name('show_notices');
 
 });
 
 
 /**
+ * --------------------------
  * いつでもアクセスできるやつ
+ * --------------------------
  */
-//ポスト
+ 
+//[ポスト]
+//トップ画面
 Route::get('/', [PostController::class, 'showTop'])->name('top');
+//ユーザーがいいねした投稿が見れる画面
 Route::get('/posts/likes/user={user}', [PostController::class, 'showPostsLiked'])->name('postsliked');
+//特定のユーザーの投稿が見れる画面
 Route::get('/posts/user={user}', [PostController::class, 'showUsersPosts'])->name('users_posts');
+//投稿全部見る画面
 Route::get('/posts/{post}', [PostController::class, 'showPost']);
+//「ポスト」テーブルの中身で検索する
+Route::get('/search/index/posts', [PostController::class, 'searchbarPosts'])->name('searchbar_posts');
 
-//アイテム
+
+//[アイテム]
+//投稿に結びついたURLから、他の同一のURLが結びついている投稿を見る
 Route::get('/search/items/{item}', [PostController::class, 'ItemSearch']);
 
-//フォロー
+//[フォロー]
 Route::get('/users/follows/{user}', [FollowController::class, 'show_followusers'])->name('show_followusers');
 Route::get('/users/followers/{user}', [FollowController::class, 'show_followers'])->name('show_followers');
 
-//ユーザー
+//[ユーザー]
 Route::post('/users', [UserController::class, 'store'])->name('store_user');
 Route::get('/users/{user}', [UserController::class, 'showProfile'])->name('show_Profile');
+//「ユーザー」テーブルの中身で検索する
+Route::get('/search/index/users', [UserController::class, 'searchbarUsers'])->name('searchbar_users');
+
 
 //上のバー
 Route::get('/dashboard', function () {

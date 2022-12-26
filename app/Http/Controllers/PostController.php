@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Comment;
 use App\Models\Item;
 use App\Models\Like;
+use App\Models\Notification;
 
 use App\Http\Requests\PostRequest;
 use App\Http\Requests\PostUpdateRequest;
@@ -17,22 +18,48 @@ use Cloudinary;
 
 class PostController extends Controller
 {
-
-    
     public function showTop(Post $post, User $user)
     {
         //blade内で使う変数'posts'と設定。'posts'の中身にgetを使い、インスタンス化した$postを代入。
         //getPaginateByLimit()はpost.php参照
         $user = Auth::user();
         
-        //その人本人が「いいね」押してるか検索
-        $like=Like::where('post_id', $post->id)->first();
-        //dd($like);
+        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // $count_noticeについて
+        // いったん通知のテストのために仮置きしている変数です。あとで消してね
         
-        return view('timeline')
-        ->with(['user'=> $user,
-                'like'=> $like,
-                'posts' => $post->getPaginateByLimit()]);
+        //dd($user);
+        if($user != NULL)
+        {
+            //ユーザーがログインしてるとき
+            $search_notice = Notification::where('user_id', $user->id);
+            //カウントかえす
+            $number_notices = $search_notice->count();
+            //内容を5件だけわたす
+            $notifications = $search_notice->limit(3);
+            
+            //その人本人が「いいね」押してるか検索
+            $like=Like::where('post_id', $post->id)->first();
+            //dd($like);
+            
+        }else{
+            //ログインしてないとき
+            $number_notices = NULL;
+            $notifications = NULL;
+        }
+        //dd($notifications);
+        
+        $new_posts = $post->getPaginateByLimit(30);
+                
+        return view('timeline',compact(
+            'user',
+            'like',
+            'new_posts',
+            
+            //あとで通知のやつ消してね
+            'number_notices',
+            'notifications',
+            ));
     }
     
     public function showUsersPosts(Post $post, User $user)
@@ -40,8 +67,13 @@ class PostController extends Controller
         $post = $user->posts()->paginate(10);
         //->orderBy('created_at', 'DESC')->paginate(10)->get();
         
-        //その人本人が「いいね」押してるか検索
-        $like=Like::where('post_id', $post->id)->where('user_id', auth()->user()->id)->first();
+        if($user != NULL)
+        {
+            //その人本人が「いいね」押してるか検索
+            $like=Like::where('post_id', $post->id)->where('user_id', auth()->user()->id)->first();
+            //dd($like);
+            
+        }
         
         return view('show_userspost')->with([
             'posts' => $post,
@@ -236,6 +268,9 @@ class PostController extends Controller
         return redirect('/posts/' . $post->id);
     }
     
+    /**
+     * タグのURLで検索するやつ
+     */
     public function ItemSearch(Item $item, Post $post)
     {
         
@@ -254,6 +289,61 @@ class PostController extends Controller
             'item' => $item,
             'like' => $like,
             ]);
+    }
+    
+    /**
+     * 投稿を検索ボックスで検索するやつ('投稿の内容'で検索するやつ)
+     */
+    public function searchbarPosts(Request $request)
+    {
+        
+        if(!($request->filled('search_posts')))
+        {
+            return back();
+        }
+        
+        $posts = Post::paginate(30);
+        $search = $request->input('search_posts');
+        
+        //検索フォームに値がある(入力されてる)かどうか
+        if($search)
+        {
+            //全角スペースを半角スペースに変換
+            $searchPhrase = mb_convert_kana($search, 's');
+            
+            //単語を半角スペースずつで配列化する
+            //"三島 美輪明宏 肩パッド"を["三島", "美輪明宏", "肩パッド"]に
+            $searchWords = preg_split('/[\s,]+/', $searchPhrase, -1, PREG_SPLIT_NO_EMPTY);
+            
+             //カラ配列作る
+            $hit_ids=array();
+            
+            //dd($searchWords);
+            //単語ずつで検索
+            foreach($searchWords as $key=>$word)
+            {
+                
+                //if($key===1) dd($query->get());
+                
+                //LIKE検索、本文、タグ
+                $result=Post::where('body', 'LIKE', '%'.$word.'%')
+                    ->orwhere('tag1', 'LIKE', '%'.$word.'%')
+                    ->orwhere('tag2', 'LIKE', '%'.$word.'%')
+                    ->orwhere('tag3', 'LIKE', '%'.$word.'%')
+                    ->orwhere('tag4', 'LIKE', '%'.$word.'%')
+                    ->orwhere('tag5', 'LIKE', '%'.$word.'%')
+                    ->pluck('id')->toArray();
+                
+                //見つかったidの配列を、unpackして$hit_idに格納
+                array_push($hit_ids, ...$result);
+            }
+            
+            //$hit_idsで見つけたidを全検索する。
+            $posts= Post::whereIn('id', $hit_ids)->paginate(30);
+        }
+        
+        //dd($searchPhrase);
+        return view('search_posts',compact('searchPhrase', 'posts'));
     }
     
     public function delete(Post $post)

@@ -10,14 +10,14 @@
     </head>
     <body>
         <h1>Kitemite</h1>
-        <h2>＠{{$user->name}}のプロフィール</h2>
+        <h2>{{$user->nickname}}のプロフィール</h2>
         
         <div class='image'>
             <img src="{{ $user->image }}">
         </div>
         
         <span>
-            <h2>＠{{ $user->name }}</h2>
+            <h2>＠{{ $user->addressname }}</h2>
         
             <!--followボタン-->
             <span>
@@ -50,10 +50,10 @@
         
         <!--過去いいね投稿表示-->
         <div class='posts'>
-            <h2>新着</h2>
+            <h2>いいねした記事</h2>
             @foreach ($liked_posts as $liked_post)
             <div class='liked_post'>
-                <a href="/users/{{ $liked_post->user->id }}">＠{{ $liked_post->user->name }}</a>
+                <a href="/users/{{ $liked_post->user->id }}">{{ $liked_post->user->nickname }}</a>
                 <!-- 画像のサイズ調整すること-->
                 <div class='image'>
                     <img src="{{ $liked_post->image }}">

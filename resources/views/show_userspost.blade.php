@@ -17,7 +17,7 @@
         </div>
         
         <span>
-            <h2>＠{{ $user->name }}</h2>
+            <h2>＠{{ $user->addressname }}</h2>
         
             <!--followボタン-->
             <span>
@@ -48,13 +48,13 @@
         
         <p>{{ $user->profile_sentence }}</p>
         
-        <p>＠{{$user->name}}の投稿</p>
+        <p>{{$user->nickname}}の投稿</p>
         <div class='posts'>
             @foreach ($posts as $post)
             <div class='post'>
                 <!--user_id、ユーザーテーブルのidで検索させた後
                     ユーザーのアカウント名を表示できるようにしたい-->
-                <p class='account_id'>＠{{ $post->user->name }}</p>
+                <p class='nickname'>{{ $post->user->nickname }}</p>
                 <!-- 画像のサイズ調整すること-->
                 <div class='image'>
                     <img src="{{ $post->image }}">

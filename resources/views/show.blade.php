@@ -18,6 +18,7 @@
             <a href="/users/{{ $user->id }}">{{ $user->nickname }}</a>
         </h3>
         
+        @auth
         <!--followボタン-->
             <span>
                 <!-- 見ているユーザーが本人か確認 -->
@@ -59,17 +60,18 @@
     		            いいね
     		            <!-- 「いいね」の数を表示 -->
                 		<span class="badge">
-    	    	    	{{ $post->likes->count() }}
-    	              	</span>
+                		    {{ $post->likes->count() }}
+                        </span>
                 	</a>
                 @endif
             </span>
         <!-- 見ているユーザーが本人か確認 -->
-                @if(!($user->they_isnt_auth_user()))
-                    <div class="edit">
-                        <a href="/posts/{{ $post->id }}/edit">編集する</a>
-                    </div>
-                @endif
+            @if(!($user->they_isnt_auth_user()))
+                <div class="edit">
+                    <a href="/posts/{{ $post->id }}/edit">編集する</a>
+                </div>
+            @endif
+        @endauth
         
         <div class="content">
             <div class="content_post">

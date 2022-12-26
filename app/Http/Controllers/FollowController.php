@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Post;
 use App\Models\Follow;
+use App\Models\Notification;
+use App\Http\Controllers\NotificationController;
 
 class FollowController extends Controller
 {
@@ -33,8 +35,8 @@ class FollowController extends Controller
     }
     
     /**
-     * follower：フォロー「する」
-     * followee：フォロー「される」
+     * followeing：フォロー「する」
+     * followed：フォロー「される」
      */
         public function follow(Request $request, Follow $follow, User $user)
     {
@@ -48,7 +50,9 @@ class FollowController extends Controller
             $follow->following_user_id = auth()->id();
             $follow->followed_user_id = $user->id;
         
+            dd($follow);
             $follow->save();
+            
         }
         
         return back();

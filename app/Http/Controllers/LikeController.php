@@ -21,6 +21,9 @@ class LikeController extends Controller
         
         $like->save();
         
+        //通知を送る
+        NotificationController::like_notice($like);
+        
         return back();
     }
     
@@ -33,6 +36,9 @@ class LikeController extends Controller
         $like = Like::where('user_id', $user_id)->where('post_id', $post_id)->first();
         
         //dd($like);
+        
+        //通知を消す用(既読済みなら消さない)
+        NotificationController::delete_like_notice($like);
         
         $like->delete();
         
