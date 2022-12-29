@@ -13,122 +13,10 @@ use App\Models\Like;
 use App\Models\Comment;
 
 use Carbon\Carbon;
+use App\Http\Controllers\NoticeConverterController;
 
 class NotificationController extends Controller
 {
-    /**
-     * notice_manager：渡す前の通知を管理する関数
-     * 同じ投稿に対していいねがつけられたときに数をまとめたりする
-     * 
-     * 使い道 : 整理された通知を渡したいとき
-     */
-    public static function notice_manager($notifications)
-    {
-        //通知にあってほしいもの
-        //user_id : 通知先
-        //type : 通知タイプ
-        //agents : ユーザーのidが入った配列
-        //post_id : 通知内容と結びついている投稿のid nullable
-        
-        $convert_notices = array();
-        $queue_notices = array();
-        $queue_number = 0;
-        
-        $follow_agents = array();
-        $follow_count = array();
-        $like_agents = array();
-        $like_count = array();
-        $liked_posts = array();
-        
-        //ちなみにコメントはそのまま通さなければならないので注意
-        
-        foreach ($notifications as $i => $notification)
-        {
-            //これが何番目の通知の処理か
-            
-            //フォローの時
-            if($notification->type == "follow")
-            
-            //いいねの時
-            if($notification->type == "like")
-            {
-                //該当のいいね情報をもっている
-                $target_like = Like::where('post_id', $notification->type_id)->first();
-                //これまでの通知用にまとめた配列の中に、
-                //該当のいいねと結びつく投稿のidがないか探す
-                //array_searchは「ある」ときはindex番号,「ない」ときはfalseを返す。
-                $like_index_number = array_search($target_like->post_id, $liked_posts);
-                
-                if($like_index_number == false)
-                {
-                    //まだ該当idが「ない」とき
-                    
-                    //まず「いいねされた投稿」配列にidを追加
-                    array_push($liked_posts, $target_like->post_id);
-                    
-                    //今追加したidのインデックスの番号特定
-                    $new_like_index_number = array_search($post_liked_id, $liked_posts);
-                    
-                    //それぞれの配列の同じ番号のところに情報を追加していく
-                    
-                    //[$like_agents]その投稿にいいねをした人の配列
-                    //post_agent_arrayはlike_agents配列に入れるための配列
-                    //この中に投稿と結びついているユーザー情報を加えていく
-                    //ビューでアイコンとか出すようにUserモデル渡す。
-                    $post_agent_array = array();
-                    $the_agent = User::where('id', $target_like->user_id)->first();
-                    array_push($post_agent_array, $the_agent);
-                    $like_agents[$new_like_index_number] = $post_agent_array;
-                    
-                    //[$like_count]その投稿についた、通知対象としてのいいねの数
-                    $like_count[$new_like_index_number] = 1;
-                    
-                }else{
-                    //すでに該当idが「ある」とき
-                    //「ある」のでpost_idは追加しない
-                    
-                    //該当の投稿idのインデックスの番号は$index_number
-                    //それぞれの配列の同じ番号のところに情報を追加していく
-                    
-                    //[$like_agents]その投稿にいいねをした人の配列
-                    //post_agent_arrayはlike_agents配列に入れるための配列
-                    //まず対応するユーザーの配列を呼び出し、
-                    //その中に投稿と結びついているユーザーidを加えていく
-                    $post_agent_array = $like_agent[$like_index_number];
-                    array_push($post_agent_array, $target_like->user_id);
-                    
-                    //[$like_count]その投稿についた、通知対象としてのいいねの数
-                    $like_count[$like_index_number] += 1;
-                }
-                
-            }
-        }
-        
-        //$notificationのforeach後
-        //これまでの配列情報を変換して$convert_noticesに詰めていく
-        
-        //いいねにまつわる通知があるとき
-        if(!(empty($liked_posts)))
-        {
-            foreach($liked_posts as $liked_post)
-            {
-                //配列のインデックス番号ゲット
-                $like_index_number = array_search($liked_post, $liked_posts);
-                
-                //$convert_noticesに配列としてつめる
-                array_push($convert_notices, [
-                    'type' => "like",
-                    'post_id' => $liked_post,
-                    'agents' => $like_agents[$like_index_number],
-                    'message' => "{$like_count}人にいいね！されました",
-                    ]);
-            }
-        }
-        
-        //もらった$notifications変数は使わないでビュー先にはこれを使わせる
-        return $convert_notices;
-    }
-    
     /**
      * showNotices：通知一覧を表示する関数
      * 
@@ -156,12 +44,11 @@ class NotificationController extends Controller
             }
         }
         
-        
-        $convert_notices = self::notice_manager($notifications);
-        dd($convert_notices);
+        $convert_notices = NoticeConverterController::notice_converter($notifications);
+        //dd($convert_notices);
         //dd('YES');
         
-        return view('timeline',compact(
+        return view('show_notices',compact(
             'convert_notices',
             ));
     }

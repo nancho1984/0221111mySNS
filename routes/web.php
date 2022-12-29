@@ -64,12 +64,14 @@ Route::group(['middleware' => ['auth']], function(){
 //[ポスト]
 //トップ画面
 Route::get('/', [PostController::class, 'showTop'])->name('top');
+//新着投稿が一覧で見れるところ
+Route::get('/posts/new', [PostController::class, 'showNewPosts'])->name('show_new_posts');
 //ユーザーがいいねした投稿が見れる画面
 Route::get('/posts/likes/user={user}', [PostController::class, 'showPostsLiked'])->name('postsliked');
 //特定のユーザーの投稿が見れる画面
 Route::get('/posts/user={user}', [PostController::class, 'showUsersPosts'])->name('users_posts');
 //投稿全部見る画面
-Route::get('/posts/{post}', [PostController::class, 'showPost']);
+Route::get('/posts/{post}', [PostController::class, 'showPost'])->name('show_post');
 //「ポスト」テーブルの中身で検索する
 Route::get('/search/index/posts', [PostController::class, 'searchbarPosts'])->name('searchbar_posts');
 
@@ -83,7 +85,9 @@ Route::get('/users/follows/{user}', [FollowController::class, 'show_followusers'
 Route::get('/users/followers/{user}', [FollowController::class, 'show_followers'])->name('show_followers');
 
 //[ユーザー]
+//ユーザーのデータを登録するところ（見えない）
 Route::post('/users', [UserController::class, 'store'])->name('store_user');
+//ユーザープロフィールが_見れるところ
 Route::get('/users/{user}', [UserController::class, 'showProfile'])->name('show_Profile');
 //「ユーザー」テーブルの中身で検索する
 Route::get('/search/index/users', [UserController::class, 'searchbarUsers'])->name('searchbar_users');
@@ -92,7 +96,13 @@ Route::get('/search/index/users', [UserController::class, 'searchbarUsers'])->na
 //上のバー
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->name('dashboard');
+
+
+
+//Route::get('/dashboard', function () {
+//    return view('dashboard');
+//})->middleware(['auth', 'verified'])->name('dashboard');
 
 require __DIR__.'/auth.php';
 

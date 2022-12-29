@@ -67,10 +67,11 @@ class UserController extends Controller
         
         $user->fill($input);
         
+        //dd($request->file('profile.image'));
         //画像が入っている＝新しい画像に変更されたときのみ保存
         if($request['profile.image'])
         {
-            $user->image = Cloudinary::upload($request->file('image')->getRealPath())->getSecurePath();
+            $user->image = Cloudinary::upload($request->file('profile.image')->getRealPath())->getSecurePath();
         }
         
         //ポストを保存

@@ -36,8 +36,13 @@
             
             <div class="items">
                 <p>使用/参考にしたアイテム</p>
-                @for ($i=0; $i<10; $i++)
+                
+                @for ($i=0; $i<$count_items; $i++)
                 <input type="text" name="items[URL][]" value="{{ $items[$i]->URL }}" /><br>
+                @endfor
+                
+                @for ($i=$count_items; $i<10; $i++)
+                <input type="text" name="items[URL][]" value="{{ old('items[URL][$i]') }}" /><br>
                 @endfor
             </div>
             

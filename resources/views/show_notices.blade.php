@@ -12,21 +12,46 @@
         <h1>Kitemite</h1>
         <a href='/posts/create'>新規投稿</a>
         <p>通知一覧</p>
-        <div class='notifications'>
-            @foreach ($notifications as $notification)
-            <div class='notification'>
-                <p class='message'>{{ $notification->message }}</p>
-            </div>
-            <!--通知で飛ばすURLについての考え
-                「フォロー」{ユーザー名}：ユーザープロフィールに飛ばす
-                「いいね」「返信」：-->
-                
-            <!--a href=" route 'show_notices', $user->id) }}">詳しく見る</a-->
-
-            @endforeach
-        </div>
-        <div class='paginate'>
-            {{ $notifications->links() }}
+        <div class='notices'>
+            @if($convert_notices != false)
+                <!--通知があるとき-->
+                @foreach ($convert_notices as $notice)
+                <div class='notice'>
+                    @if($notice['type'] === "replyPost" || $notice['type'] === "replyCmnt")
+                        <!--投稿のコメント、コメントへの返信のとき-->
+                        <span>
+                            <p class='message'>{{ $notice['agents']->nickname }}さんがあなたの
+                                @if($notice['type'] === "replyPost")
+                                投稿にコメントしました
+                                @else
+                                コメントに返信しました
+                                @endif
+                            </p>
+                        </span>
+                        {{ $notice['message'] }}
+                        <a href="{{route('show_post', $notice['post_id']) }}">詳しく見る</a>
+                    
+                    @else
+                        <!--いいねかフォローの通知のとき-->
+                        @if($notice['type'] === "follow")
+                            <p class='message'>{{ $notice['count'] }}人にフォローされました</p>
+                        @else
+                            <p class='message'>{{ $notice['count'] }}人にいいねされました</p>
+                            <a href="{{route('show_post', $notice['post_id']) }}">詳しく見る</a>
+                        @endif
+                        
+                        <!--ユーザー一覧を表示-->
+                        @foreach( $notice['agents'] as $agent)
+                            {{ $agent->nickname }}
+                        @endforeach
+                        
+                    @endif
+                </div>
+                @endforeach
+            @else
+                <!--通知がないとき-->
+                <p>未読の通知はありません</p>
+            @endif
         </div>
     </body>
 </html>

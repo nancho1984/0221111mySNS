@@ -23,6 +23,7 @@ class PostController extends Controller
         //blade内で使う変数'posts'と設定。'posts'の中身にgetを使い、インスタンス化した$postを代入。
         //getPaginateByLimit()はpost.php参照
         $user = Auth::user();
+        $number_notices = "";
         
         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // $count_noticeについて
@@ -32,24 +33,27 @@ class PostController extends Controller
         if($user != NULL)
         {
             //ユーザーがログインしてるとき
-            $search_notice = Notification::where('user_id', $user->id);
+            $search_notice = Notification::where('user_id', $user->id)
+                ->where('read_at', NULL);
             //カウントかえす
             $number_notices = $search_notice->count();
-            //内容を5件だけわたす
+            //内容を3件だけわたす
             $notifications = $search_notice->limit(3);
             
             //その人本人が「いいね」押してるか検索
-            $like=Like::where('post_id', $post->id)->first();
+            $like=Like::where('post_id', $post->id)->where('user_id', $user->id)->first();
             //dd($like);
             
         }else{
             //ログインしてないとき
             $number_notices = NULL;
             $notifications = NULL;
+            $like = NULL;
         }
         //dd($notifications);
         
-        $new_posts = $post->getPaginateByLimit(30);
+        //もともとは30
+        $new_posts = $post->getPaginateByLimit(5);
                 
         return view('timeline',compact(
             'user',
@@ -59,6 +63,25 @@ class PostController extends Controller
             //あとで通知のやつ消してね
             'number_notices',
             'notifications',
+            ));
+    }
+    
+    public function showNewPosts(Post $post, User $user)
+    {
+        //blade内で使う変数'posts'と設定。'posts'の中身にgetを使い、インスタンス化した$postを代入。
+        //getPaginateByLimit()はpost.php参照
+        $user = Auth::user();
+        $number_notices = "";
+        
+        //dd($notifications);
+        
+        $new_posts = $post->getPaginateByLimit(30);
+        
+        
+                
+        return view('show_newposts',compact(
+            'user',
+            'new_posts',
             ));
     }
     
@@ -94,33 +117,32 @@ class PostController extends Controller
     }
     
     /**
-    * 特定IDのpostを表示する
+    * 特定IDのpostを詳細表示する
     *
     * @params Object Post // 引数の$postはid=1のPostインスタンス
     * @return Reposnse post view
     */
-    public function showPost(Post $post, User $user)
+    public function showPost(Post $post)
     {
-        //フォローに使うためのユーザーデータ
-        $user = User::where('id', $post->user_id)->first();
+        //フォローに使う用、投稿したユーザーのデータ
+        $writer_user = User::where('id', $post->user_id)->first();
+        $reader_user = Auth::user();
+        //dd($reader_user);
+        
         
         //postモデルのcommentsメソッドでコメント呼び出し
-        $parent_post = $post;
-        $comments = $parent_post->comments;
+        $comments = $post->comments;
         //dd($comments);
         
         //Itemをよぶ
         $items = $post->items;
         
-        //その人本人が「いいね」押してるか検索
-        $like=Like::where('post_id', $post->id)->where('user_id', auth()->user()->id)->first();
-        
         return view('show')->with([
             'post' => $post,
-            'user' => $user,
+            'writer_user' => $writer_user,
+            'reader_user' => $reader_user,
             'comments' => $comments,
             'items' => $items,
-            'like' => $like,
         ]);
         //'post'はbladeファイルで使う変数。中身は$postはid=1のPostインスタンス。
     }
@@ -181,11 +203,12 @@ class PostController extends Controller
     {
         //Itemをよぶ
         $items = $post->items;
-        //dd($items);
+        $count_items = count($items);
         
         return view('edit')->with([
             'post' => $post,
             'items' => $items,
+            'count_items' => $count_items,
             ]);
     }
     
@@ -244,15 +267,20 @@ class PostController extends Controller
          * 
          * array_diff(今回のURL配列(input) - 前回のURL配列 = 前回はなかったけど「今回」はあるURL)
          */
+         
+        //dd(array_diff($input_URLs, $before_URLs));
         foreach(array_diff($input_URLs, $before_URLs) as $new_URL)
         {
-            //dd($new_URL);
-            //URLはすでにItemテーブルに存在するか？
-            if(Item::where('URL', $new_URL)->exists())
+            //空欄の値を持ってきてないか
+            if($new_URL !== null)
             {
-                
-            } else {
+                //URLはすでにItemテーブルに存在するか？
+                if(Item::where('URL', $new_URL)->exists())
+                {
+                    
+                } else {
                     //保存。fillだと一個しか登録できない
+                    //dd($new_URL);
                     Item::create(['URL'=>$new_URL]);
         
                     //中間テーブルに保存
@@ -262,6 +290,7 @@ class PostController extends Controller
                     $item_withid = Item::where('URL', $new_URL)->first();
                     //itemに結びついたpostのidを呼んで、入れてsyncで保存
                     $item_withid->Posts()->attach($post->id); 
+                }
             }
         }
         
