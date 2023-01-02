@@ -33,18 +33,18 @@
             
             <div class="items">
                 <!-- アイテムを追加ボタンを押したら、次のフォームが出るようにすること-->
-                <p>アイテム</p>
+                <p>使用アイテム</p>
+                @for ($i=0; $i<10; $i++)
+                <input type="text" name="items[]" placeholder="使用アイテムのURL" value="{{ old('items[$i]') }}" /><br>
+                @endfor
+            </div>
+            <div class="references">
+                <!-- アイテムを追加ボタンを押したら、次のフォームが出るようにすること-->
+                <p>参考サイト</p>
                 <p>使用したアイテムだけでなく、参考にしたサイトのURLもあると、他の人も参考にしやすい投稿になります！</p>
-                <input type="text" name="items[URL][0]" placeholder="アイテムのURL" value="{{ old('items.URL.0') }}"/><br>
-                <input type="text" name="items[URL][1]" placeholder="アイテムのURL" value="{{ old('items.URL.1') }}"/><br>
-                <input type="text" name="items[URL][2]" placeholder="アイテムのURL" value="{{ old('items.URL.2') }}"/><br>
-                <input type="text" name="items[URL][3]" placeholder="アイテムのURL" value="{{ old('items.URL.3') }}"/><br>
-                <input type="text" name="items[URL][4]" placeholder="アイテムのURL" value="{{ old('items.URL.4') }}"/><br>
-                <input type="text" name="items[URL][5]" placeholder="アイテムのURL" value="{{ old('items.URL.5') }}"/><br>
-                <input type="text" name="items[URL][6]" placeholder="アイテムのURL" value="{{ old('items.URL.6') }}"/><br>
-                <input type="text" name="items[URL][7]" placeholder="アイテムのURL" value="{{ old('items.URL.7') }}"/><br>
-                <input type="text" name="items[URL][8]" placeholder="アイテムのURL" value="{{ old('items.URL.8') }}"/><br>
-                <input type="text" name="items[URL][9]" placeholder="アイテムのURL" value="{{ old('items.URL.9') }}"/><br>
+                @for ($i=0; $i<5; $i++)
+                <input type="text" name="references[]" placeholder="参考サイトのURL" value="{{ old('items[$i]') }}" /><br>
+                @endfor
             </div>
             
             <div class="body">
@@ -54,11 +54,11 @@
             <div class="tags">
                 <p>タグ</p>
                 <!-- タグを追加ボタンを押したら、次のフォームが出るようにすること-->
-                <input type="text" name="post[tag1]" placeholder="タグ1&#40;20字まで&#41;" value="{{ old('post.tag1') }}"/>
-                <input type="text" name="post[tag2]" placeholder="タグ2&#40;20字まで&#41;" value="{{ old('post.tag2') }}"/>
-                <input type="text" name="post[tag3]" placeholder="タグ3&#40;20字まで&#41;" value="{{ old('post.tag3') }}"/>
-                <input type="text" name="post[tag4]" placeholder="タグ4&#40;20字まで&#41;" value="{{ old('post.tag4') }}"/>
-                <input type="text" name="post[tag5]" placeholder="タグ5&#40;20字まで&#41;" value="{{ old('post.tag5') }}"/>
+                <input type="text" name="tags[0]" placeholder="タグ&#40;20字まで&#41;" value="{{ old('tags.0') }}"/>
+                <input type="text" name="tags[1]" placeholder="タグ&#40;20字まで&#41;" value="{{ old('tags.1') }}"/>
+                <input type="text" name="tags[2]" placeholder="タグ&#40;20字まで&#41;" value="{{ old('tags.2') }}"/>
+                <input type="text" name="tags[3]" placeholder="タグ&#40;20字まで&#41;" value="{{ old('tags.3') }}"/>
+                <input type="text" name="tags[4]" placeholder="タグ&#40;20字まで&#41;" value="{{ old('tags.4') }}"/>
             </div>
             <!--下書き保存作れたらいいな…-->
             <input type="submit" value="投稿する"/>

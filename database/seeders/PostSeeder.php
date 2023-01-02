@@ -19,6 +19,8 @@ class PostSeeder extends Seeder
      */
     public function run()
     {
+        
+        
         // 1レコード
         //DB::table('posts')->insert([
             //'body' => 'first post',
@@ -34,6 +36,6 @@ class PostSeeder extends Seeder
         //]);
         
         //factory10こ 
-        Post::factory()->count(10)->create();
+        Post::factory()->count(40)->create();
     }
 }

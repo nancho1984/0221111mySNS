@@ -9,6 +9,8 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\HasApiTokens;
 
+use App\Models\Post;
+
 class User extends Authenticatable
 {
     //シーダー用
@@ -93,4 +95,21 @@ class User extends Authenticatable
         return Follow::where('following_user_id', $user_id)->where('followed_user_id', $followed_id)->exists();
     }
     
+    //follow数の多い順から並べて、上位を持っていく
+    public function get_Entire_popular_users($limit_count)
+    {
+        $entire_popular_users = $this::orderBy('count_follows', 'DESC')
+                                    ->take($limit_count)
+                                    ->get();
+        //dd($entire_popular_posts);
+        
+        return $entire_popular_users;
+    }
+    
+    //最新の一軒だけ持ってくる
+    public function get_users_new_post()
+    {
+        return $this->hasOne(Post::class)
+            ;
+    }
 }

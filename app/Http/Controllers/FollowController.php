@@ -34,42 +34,22 @@ class FollowController extends Controller
         return view('show_followers',compact('followers', 'followers_count'));
     }
     
-    /**
-     * followeing：フォロー「する」
-     * followed：フォロー「される」
-     */
-        public function follow(Request $request, Follow $follow, User $user)
+    //認証済みのユーザーがフォローしている人の新しい投稿を入手する
+    //[必要な変数]
+    //$auth_user : ログインしているユーザーのインスタンス
+    //$limit_count : もし限られた個数必要であれば数字を入れる。
+    //               ページネートでほしい場合はnullを入れておいてください。
+    public static function get_follows_posts($auth_user, $limit_count)
     {
-        $following_user = auth()->id();
-        $followed_user = $user->id;
+        $follow = new Follow;
+        $post = new Post;
         
-        //自分だったらフォローさせない
-        if($following_user != $followed_user){
-            
-            //dd($follow);
-            $follow->following_user_id = auth()->id();
-            $follow->followed_user_id = $user->id;
+        $follow_ids = $follow->follow_ids($auth_user);
+        //auth_userが「フォローしている」人のIDだけの配列に変える
+        $following_user_ids = $follow_ids->pluck('followed_user_id')->toArray();
         
-            dd($follow);
-            $follow->save();
-            
-        }
+        $follows_new_posts = $post->follows_new_posts($following_user_ids, $limit_count);
         
-        return back();
-    }
-    
-    public function unfollow(Request $request, Follow $follow, User $user)
-    {
-        $user_id = auth()->id();
-        $followed_user_id = $user->id;
-        //dd($user_id);
-        //dd($post_id);
-        $follow = Follow::where('following_user_id', $user_id)->where('followed_user_id', $followed_user_id)->first();
-        
-        //dd($follow);
-        
-        $follow->delete();
-        
-        return back();
+        return $follows_new_posts;
     }
 }

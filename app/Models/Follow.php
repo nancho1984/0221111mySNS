@@ -34,4 +34,10 @@ class Follow extends Model
     {
         return $this->belongsTo(User::class);
     }
+    
+    //ユーザーIDからフォローしてる人をたどるとき使う
+    public function follow_ids($auth_user)
+  {
+      return $this->where('following_user_id', $auth_user->id)->get();
+  }
 }

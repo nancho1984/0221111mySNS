@@ -21,6 +21,11 @@ class LikeController extends Controller
         
         $like->save();
         
+        //postの人気度をはかるためのカウントを1つ「増やす」
+        $post->count_likes ++;
+
+        $post->save();
+        
         //通知を送る
         NotificationController::like_notice($like);
         
@@ -35,7 +40,10 @@ class LikeController extends Controller
         //dd($post_id);
         $like = Like::where('user_id', $user_id)->where('post_id', $post_id)->first();
         
-        //dd($like);
+        //postの人気度をはかるためのカウントを1つ「減らす」
+        $post->count_likes --;
+
+        $post->save();
         
         //通知を消す用(既読済みなら消さない)
         NotificationController::delete_like_notice($like);

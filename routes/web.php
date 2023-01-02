@@ -28,6 +28,8 @@ use App\Http\Controllers\NotificationController;
 Route::group(['middleware' => ['auth']], function(){
     
     //ポスト
+    //フォローしているユーザーの新着投稿が一覧で見れるところ
+    Route::get('/posts/follows', [PostController::class, 'showFollowsPosts'])->name('show_follows_posts');
     Route::post('/posts', [PostController::class, 'store']);
     Route::get('/posts/create', [PostController::class, 'create']);
     Route::get('/posts/{post}/edit', [PostController::class, 'edit']);
@@ -49,8 +51,10 @@ Route::group(['middleware' => ['auth']], function(){
     Route::put('/users/{user}/update', [UserController::class, 'update']);
     
     //[通知]
-    //通知をみせるとき
+    //通知の詳細をみせるとき
     Route::get('/notifications/{user}', [NotificationController::class, 'showNotices'])->name('show_notices');
+    //通知をナビゲーションバーにわたす
+    Route::get('/notifications/{user}/get', [NotificationController::class, 'getNotices'])->name('get_notices');
 
 });
 
@@ -74,7 +78,6 @@ Route::get('/posts/user={user}', [PostController::class, 'showUsersPosts'])->nam
 Route::get('/posts/{post}', [PostController::class, 'showPost'])->name('show_post');
 //「ポスト」テーブルの中身で検索する
 Route::get('/search/index/posts', [PostController::class, 'searchbarPosts'])->name('searchbar_posts');
-
 
 //[アイテム]
 //投稿に結びついたURLから、他の同一のURLが結びついている投稿を見る

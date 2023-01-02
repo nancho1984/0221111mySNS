@@ -12,6 +12,9 @@ use App\Models\Item;
 use App\Models\Like;
 use App\Models\Notification;
 
+use App\Http\Controllers\ItemController;
+use App\Http\Controllers\FollowController;
+
 use App\Http\Requests\PostRequest;
 use App\Http\Requests\PostUpdateRequest;
 use Cloudinary;
@@ -20,49 +23,95 @@ class PostController extends Controller
 {
     public function showTop(Post $post, User $user)
     {
-        //blade内で使う変数'posts'と設定。'posts'の中身にgetを使い、インスタンス化した$postを代入。
-        //getPaginateByLimit()はpost.php参照
-        $user = Auth::user();
-        $number_notices = "";
+        //--------------------------
+        //投稿をとってくる処理
+        //--------------------------
         
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        // $count_noticeについて
-        // いったん通知のテストのために仮置きしている変数です。あとで消してね
+        //[みんなの新着投稿]
+        //新着の中でもトップの3つをとってくる
+        $new_posts = Post::orderBy('created_at', 'DESC')
+                    ->take(3)
+                    ->get();
+                    
+        //[フォロー新着投稿]
+        //フォローしている人の新着の中でも最新のいくつかをとってくる
+        //投稿を全部持ってこられると困るので、３つだけモラウ
         
-        //dd($user);
-        if($user != NULL)
+        $auth_user = Auth::user();
+        
+        $limit_count = 3;
+        
+        //フォロー機能はログインしている人限定なので
+        //ログインしてるか確認
+        if($auth_user !== null)
         {
-            //ユーザーがログインしてるとき
-            $search_notice = Notification::where('user_id', $user->id)
-                ->where('read_at', NULL);
-            //カウントかえす
-            $number_notices = $search_notice->count();
-            //内容を3件だけわたす
-            $notifications = $search_notice->limit(3);
-            
-            //その人本人が「いいね」押してるか検索
-            $like=Like::where('post_id', $post->id)->where('user_id', $user->id)->first();
-            //dd($like);
-            
-        }else{
-            //ログインしてないとき
-            $number_notices = NULL;
-            $notifications = NULL;
-            $like = NULL;
+            $follows_new_posts = FollowController::get_follows_new_posts($auth_user, $limit_count);
+            //dd($follows_new_posts);
         }
-        //dd($notifications);
+        else
+        {
+            //ログインしてないとき
+            $follows_new_posts = null;
+        }
+                    
+        //[人気の投稿]
+        //今の旬のコーデを知りたいと思うので、topでは「月間の」人気投稿を表示する
+        //人気の投稿を全部持ってこられると困るので、３つだけモラウ
+        $limit_count = 3;
         
-        //もともとは30
-        $new_posts = $post->getPaginateByLimit(5);
+        $popular_posts = $post->get_aMonth_popular_posts($limit_count);
+        
+        //もし月間の人気投稿が一個もない場合、全期間の人気投稿をもらってくる
+        if(count($popular_posts) === 0)
+        {
+            $popular_posts = $post->get_Entire_popular_posts($limit_count);
+        }
+        
+        
+        
+        //dd($popular_users);
                 
         return view('timeline',compact(
-            'user',
-            'like',
-            'new_posts',
+            'auth_user',
             
-            //あとで通知のやつ消してね
-            'number_notices',
-            'notifications',
+            'new_posts',
+            'popular_posts',
+            'follows_new_posts'
+            
+            ));
+    }
+    
+    public function showFollowsPosts(Post $post, User $user)
+    {
+        //--------------------------
+        //投稿をとってくる処理
+        //--------------------------
+        
+        //フォローしている人の投稿をs新しい順で持ってくる
+        
+        $auth_user = Auth::user();
+        
+        //ページネートでほしいのでカウントはNULLを指定
+        $limit_count = null;
+        
+        //フォロー機能はログインしている人限定なので
+        //ログインしてるか確認
+        if($auth_user !== null)
+        {
+            $follows_new_posts = FollowController::get_follows_posts($auth_user, $limit_count);
+            //dd($follows_new_posts);
+        }
+        else
+        {
+            //ログインしてないとき
+            $follows_new_posts = null;
+        }
+                
+        return view('show_follows_posts',compact(
+            'auth_user',
+            
+            'follows_new_posts'
+            
             ));
     }
     
@@ -129,6 +178,9 @@ class PostController extends Controller
         $reader_user = Auth::user();
         //dd($reader_user);
         
+        $search_URLs = ItemController::pass_converted_URLs($post);
+        
+        //dd($search_URLs);
         
         //postモデルのcommentsメソッドでコメント呼び出し
         $comments = $post->comments;
@@ -142,7 +194,8 @@ class PostController extends Controller
             'writer_user' => $writer_user,
             'reader_user' => $reader_user,
             'comments' => $comments,
-            'items' => $items,
+            'items' => $search_URLs['items'],
+            'references' => $search_URLs['references'],
         ]);
         //'post'はbladeファイルで使う変数。中身は$postはid=1のPostインスタンス。
     }
@@ -154,61 +207,87 @@ class PostController extends Controller
     
     public function store(PostRequest $request, Post $post, Item $item)
     {
-        
         //dd($request->all());
         
         //request[]でDBから「型(キー)」をもらってinputをつめる
         $input_post = $request['post'];
-        $input_URLs = $request['items']['URL'];
+        $input_items = array_unique($request['items']);
+        $input_references = array_unique($request['references']);
+        
+        //dd($input_items);
         
         $sizechecker = $request->file('post.image')->getSize();
         //sizeが1MB以上なら元居たページに戻す
         
         $post->fill($input_post);
+        
+        //タグを保存していく
+        
+        //タグ入力フォームのそれぞれの値を確認
+        foreach($request['tags'] as $tag)
+        {
+            //値がからじゃ「ない」か確認
+            if($tag !== null){
+                //タグ1がまだ「ない」とき
+                if(!$post->tag1)
+                {
+                    //dd($tag);
+                    $post->tag1 = $tag;
+                }
+                //タグ1は「ある」けど、タグ2がまだ「ない」とき
+                elseif(!$post->tag2)
+                {
+                    //dd($tag);
+                    $post->tag2 = $tag;
+                }
+                //タグ2は「ある」けど、タグ3がまだ「ない」とき
+                elseif(!$post->tag3)
+                {
+                    //dd($tag);
+                    $post->tag3 = $tag;
+                }
+                //タグ3は「ある」けど、タグ4がまだ「ない」とき
+                elseif(!$post->tag4)
+                {
+                    //dd($tag);
+                    $post->tag4 = $tag;
+                }
+                //タグ4は「ある」けど、タグ5がまだ「ない」とき
+                elseif(!$post->tag5)
+                {
+                    //dd($tag);
+                    $post->tag5 = $tag;
+                }
+            }
+        }
+        
+        //dd($post);
         $post->image = Cloudinary::upload($request->file('post.image')->getRealPath())->getSecurePath();
         
         //ポストを保存
         $post->user_id = auth()->id();
         $post->save();
         
-        //インプット内のそれぞれのURLに対して作業
-        foreach($input_URLs as $input_URL){
-            //値はあるかチェック
-            if(empty($input_URL)){
-                
-            } else {
-                //URLの重複チェック。すでにある時は保存しない
-                if (Item::where('URL', $input_URL)->exists()){
-            
-                } else {
-                    //保存。fillだと一個しか登録できない
-                    Item::create(['URL'=>$input_URL]);
-                }
+        ItemController::store_items($input_items, $post);
         
-                //中間テーブルに保存
-                //まずitemのidをとってくる。
-                //もしも複数同じものがあった時エラーを起こさない用firstメソッド
-                $item_withid = Item::where('URL', $input_URL)->first();
-                //itemに結びついたpostのidを呼んで、入れてsyncで保存
-                //attachはダブりあり、syncは同じidの結びつきは一個だけ
-                $item_withid->Posts()->attach($post->id);   
-            }
-         
-        }
+        ItemController::store_references($input_references, $post);
         
         return redirect('/posts/' . $post->id);
     }
     
     public function edit(Post $post)
     {
-        //Itemをよぶ
-        $items = $post->items;
-        $count_items = count($items);
+        $search_URLs = ItemController::pass_converted_URLs($post);
+        
+        $count_references = count($search_URLs['references']);
+        $count_items = count($search_URLs['items']);
         
         return view('edit')->with([
             'post' => $post,
-            'items' => $items,
+            'items' => $search_URLs['items'],
+            'references' => $search_URLs['references'],
             'count_items' => $count_items,
+            'count_references' => $count_references,
             ]);
     }
     
@@ -216,14 +295,68 @@ class PostController extends Controller
     {
         //dd($request->all());
         $input = $request['postupdate'];
-        $input_URLs = $request['items']['URL'];
+        $input_items = array_unique($request['items']);
+        $input_references = array_unique($request['references']);
+        $before_URLs = ItemController::pass_converted_URLs($post);
         
-        //もともとあったURLをしらべる
-        $DBURLs = $post->items()->get(["URL"]);
-        //dd($DBURLs);
+        //[タグの更新・保存]
+        //array_filterは値があるものだけの配列にする
+        //array_valuesでfilterで歯抜けになった番号を付けなおす
+        $input_tags = array_values(array_filter($request['tags']));
+        $tag_counter = count($input_tags);
+        //カラムの使用上、空欄も含めて5個の配列でないといけないので空欄追加
+        for($i = 0; $i < 5-$tag_counter; $i++)
+        {
+            $input_tags[] = null;
+        }
+        //タグを更新していく
+        //問答無用で5回繰り返す
+        //「値がある」ものは前の番号で保存しきって、「値がない」ものは後ろへ
+        for($i = 0; $i < 5; $i++)
+        {
+            //$tag:繰り返しの中で使う便宜的変数
+            $tag = $input_tags[$i];
+            
+            if($i === 0)
+            {
+                //1回目のループ
+                Post::where('id', $post->id)->update([
+                    'tag1' => $tag,
+                    ]);
+            }
+            elseif($i === 1)
+            {
+                //2回目のループ
+                Post::where('id', $post->id)->update([
+                    'tag2' => $tag,
+                    ]);
+            }
+            elseif($i === 2)
+            {
+                //3回目のループ
+                Post::where('id', $post->id)->update([
+                    'tag3' => $tag,
+                    ]);
+            }
+            elseif($i === 3)
+            {
+                //4回目のループ
+                Post::where('id', $post->id)->update([
+                    'tag4' => $tag,
+                    ]);
+            }
+            elseif($i === 4)
+            {
+                //5回目のループ
+                Post::where('id', $post->id)->update([
+                    'tag5' => $tag,
+                    ]);
+            }
+        }
+        //dd(Post::where('id', $post->id)->first());
         
+        //[画像の保存]
         $post->fill($input);
-        
         //画像が入っている＝新しい画像に変更されたときのみ保存
         //dd($request->file('postupdate.image'));
         if($request->file('postupdate.image'))
@@ -233,66 +366,15 @@ class PostController extends Controller
         
         //dd($post->image);
         $post->user_id = auth()->id();
+        
+        //ポストの項目はすべて済ませたのでいったん保存
+        //dd($post);
         $post->save();
         
+        //[URLの保存]
+        ItemController::update_items($input_items, $before_URLs, $post);
         
-        //アイテムの保存について
-        //前までに保存されてるURLをとってくる
-        $before_URLs = [];
-        foreach($DBURLs as $DBURL)
-        {
-            array_push($before_URLs, $DBURL->URL); 
-        }
-        //dd($before_URLs);
-        
-        
-        /**
-         * このforeachでやること：前にあったけど今ないやつを削除する。
-         * 
-         * array_diff(前回のURL配列 - 今回のURL配列(input) = 「前回」はあったけど今回はなくなったURL)
-         */
-        foreach(array_diff($before_URLs, $input_URLs) as $deleted_URL)
-        {
-            //getだとコレクションになってしまう
-            $deleted_item = Item::where('URL', $deleted_URL)->first();
-            //dd($deleted_item);
-            $deleted_item->Posts()->detach($post->id);
-        }
-        
-        /**
-         * このforeachでやること：前なかったやつを登録する。
-         * 
-         * Itemsに登録されて「ない」ときは、Itemsに登録、関係も登録(中間テーブル)。
-         * Itemsに登録されて「いる」ときは、関係だけ登録。
-         * 
-         * array_diff(今回のURL配列(input) - 前回のURL配列 = 前回はなかったけど「今回」はあるURL)
-         */
-         
-        //dd(array_diff($input_URLs, $before_URLs));
-        foreach(array_diff($input_URLs, $before_URLs) as $new_URL)
-        {
-            //空欄の値を持ってきてないか
-            if($new_URL !== null)
-            {
-                //URLはすでにItemテーブルに存在するか？
-                if(Item::where('URL', $new_URL)->exists())
-                {
-                    
-                } else {
-                    //保存。fillだと一個しか登録できない
-                    //dd($new_URL);
-                    Item::create(['URL'=>$new_URL]);
-        
-                    //中間テーブルに保存
-                    //まずitemのidをとってくる。
-                    //もしも複数同じものがあった時エラーを起こさない用firstメソッド
-                    //attachはダブりあり、syncは同じidの結びつきは一個だけ
-                    $item_withid = Item::where('URL', $new_URL)->first();
-                    //itemに結びついたpostのidを呼んで、入れてsyncで保存
-                    $item_withid->Posts()->attach($post->id); 
-                }
-            }
-        }
+        ItemController::update_references($input_references, $before_URLs, $post);
         
         return redirect('/posts/' . $post->id);
     }
@@ -305,6 +387,8 @@ class PostController extends Controller
         
         //$itemはリクエストから持ってきたitemのインスタンス
         //posts()はリレーションメソッド
+        
+        //dd($item);
         
         //dd($item->posts()->paginate(10));
         $posts = $item->posts()->paginate(10);

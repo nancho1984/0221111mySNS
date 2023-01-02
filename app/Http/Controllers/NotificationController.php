@@ -17,6 +17,35 @@ use App\Http\Controllers\NoticeConverterController;
 
 class NotificationController extends Controller
 {
+    public function getNotices(User $user, Notification $notification)
+    {
+        if($user != NULL)
+        {
+            //ユーザーがログインしてるとき
+            $search_notice = Notification::where('user_id', $user->id)
+                ->where('read_at', NULL);
+            //カウントかえす
+            $number_notices = $search_notice->count();
+            //内容を3件だけわたす
+            $notifications = $search_notice->limit(3);
+            
+        }else{
+            //ログインしてないとき
+            $number_notices = NULL;
+            $notifications = NULL;
+        }
+        //dd($notifications);
+        
+        //もともとは30
+        $new_posts = $post->getPaginateByLimit(5);
+                
+        return view('navigation',compact(
+            //あとで通知のやつ消してね
+            'number_notices',
+            'notifications',
+            ));
+    }
+    
     /**
      * showNotices：通知一覧を表示する関数
      * 

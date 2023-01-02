@@ -19,15 +19,6 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        //ゲストユーザーを初期設定する
-        DB::table('users')->insert([
-            'id' => 1,
-            'name' => 'ゲスト',
-            'email' => 'guest@guest.com',
-            'password' => 'guest',
-            'created_at' => new DateTime(),
-            'updated_at' => new DateTime(),
-        ]);
-        
+        User::factory()->count(50)->create();
     }
 }

@@ -96,7 +96,13 @@ class UserController extends Controller
             //dd($follow);
             $follow->following_user_id = auth()->id();
             $follow->followed_user_id = $user->id;
-        
+            
+            //userの人気度をはかるためのカウントを1つ「増やす」
+            $user->count_follows ++;
+            //dd($user->count_follows);
+
+            $user->save();
+            
             $follow->save();
             //フォローした通知を出すための呼び出し
             NotificationController::follow_notice($follow);
@@ -113,7 +119,11 @@ class UserController extends Controller
         //dd($post_id);
         $follow = Follow::where('following_user_id', $user_id)->where('followed_user_id', $followed_user_id)->first();
         
-        //dd($follow);
+        //userの人気度をはかるためのカウントを1つ「減らす」
+        $user->count_follows --;
+        //dd($user->count_follows);
+
+        $user->save();
         
         //通知を消す用(既読済みなら消さない)
         NotificationController::delete_follow_notice($follow);

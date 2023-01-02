@@ -6,17 +6,252 @@ use Illuminate\Http\Request;
 use App\Models\Item;
 use App\Models\Post;
 
+use Illuminate\Support\Facades\DB;
+
 class ItemController extends Controller
 {
-    public function __construct(Item $item)
+    public static function store_items($input_items, $post)
     {
-        $this->item = $item;
+        //インプット内のそれぞれのURLに対して作業
+        foreach($input_items as $item){
+            //値はあるかチェック
+            if(!empty($item))
+            {
+                //URLの重複チェック。すでにある時は保存しない
+                if (!Item::where('URL', $item)->exists())
+                {
+                    //保存。fillだと一個しか登録できない
+                    Item::create(['URL'=>$item]);
+                }
+                
+                //中間テーブルに保存
+                //まずitemのidをとってくる。
+                //もしも複数同じものがあった時エラーを起こさない用firstメソッド
+                $item_withid = Item::where('URL', $item)->first();
+                
+                DB::table('item_post')->insert([
+                    'item_id' => $item_withid->id,
+                    'post_id' => $post->id,
+                    'type' => "item",
+                    ]);
+            }
+        }
     }
     
-    public function store(Request $request)
+    public static function store_references($input_references, $post)
     {
         
-        return back();
+        //インプット内のそれぞれのURLに対して作業
+        foreach($input_references as $reference){
+            //値はあるかチェック
+            if(!empty($reference))
+            {
+                //URLの重複チェック。すでにある時は保存しない
+                if (!Item::where('URL', $reference)->exists())
+                {
+                    //保存。fillだと一個しか登録できない
+                    Item::create([
+                        'URL'=>$reference,
+                    ]);
+                }
+        
+                //中間テーブルに保存
+                //まずitemのidをとってくる。
+                //もしも複数同じものがあった時エラーを起こさない用firstメソッド
+                $reference_withid = Item::where('URL', $reference)->first();
+                
+                DB::table('item_post')->insert([
+                    'item_id' => $reference_withid->id,
+                    'post_id' => $post->id,
+                    'type' => "ref",
+                    ]);
+                //itemに結びついたpostのidを呼んで、入れてsyncで保存
+                //attachはダブりあり、syncは同じidの結びつきは一個だけ
+                //$item_withid->Posts()->attach($post->id);   
+            }
+        }
     }
     
+    public static function update_items($input_items, $before_URLs, $post)
+    {
+        //$before_URLs:前までこの投稿に結びついていたURL
+        //$input_items:今の更新でこの投稿に結びつけようとしているURL
+        
+        //保存する際には注意が必要なのでここで処理をする
+        //「前は『ある』、今は『ない』」は削除する。
+        //「前は『ない』、今は『ある』」はあらたに保存する。
+        
+        //input_URLsは値の配列、一方before_URLsは「アイテムモデル」の配列(ややこしい)
+        //そのため、before_URLsを値の配列に変換する
+        $before_items = array();
+        
+        foreach($before_URLs['items'] as $item)
+        {
+            $before_items[] = $item->URL;
+        }
+        
+        /**
+         * このforeachでやること：前にあったけど今ないやつを削除する。
+         * 
+         * array_diff(前回のURL配列 - 今回のURL配列(input) = 「前回」はあったけど今回はなくなったURL)
+         */
+        foreach(array_diff($before_items, $input_items) as $deleted_item)
+        {
+            //getだとコレクションになってしまう
+            $deleted_item = Item::where('URL', $deleted_URL)->first();
+            //dd($deleted_item);
+            $deleted_item->Posts()->detach($post->id);
+        }
+        
+        /**
+         * このforeachでやること：前なかったやつを登録する。
+         * 
+         * Itemsに登録されて「ない」ときは、Itemsに登録、関係も登録(中間テーブル)。
+         * Itemsに登録されて「いる」ときは、関係だけ登録。
+         * 
+         * array_diff(今回のURL配列(input) - 前回のURL配列 = 前回はなかったけど「今回」はあるURL)
+         */
+        foreach(array_diff($input_items, $before_items) as $new_item)
+        {
+            //空欄の値を持ってきてないか
+            if($new_item !== null)
+            {
+                //URLはすでにItemテーブルに登録されているか？
+                if(!Item::where('URL', $new_item)->exists())
+                {
+                    //保存。fillだと一個しか登録できない
+                    //dd($new_URL);
+                    Item::create(['URL'=>$new_item]);
+                }
+                
+                //中間テーブルに保存
+                    //まずitemのidをとってくる。
+                    //もしも複数同じものがあった時エラーを起こさない用firstメソッド
+                    //attachはダブりあり、syncは同じidの結びつきは一個だけ
+                    $item_withid = Item::where('URL', $new_item)->first();
+                    //itemに結びついたpostのidを呼んで、入れてsyncで保存
+                    DB::table('item_post')->insert([
+                    'item_id' => $item_withid->id,
+                    'post_id' => $post->id,
+                    'type' => "item",
+                    ]);
+            }
+        }
+    }
+    
+    public static function update_references($input_references, $before_URLs, $post)
+    {
+        //$before_URLs:前までこの投稿に結びついていたURL
+        //$input_references:今の更新でこの投稿に結びつけようとしているURL
+        
+        //保存する際には注意が必要なのでここで処理をする
+        //「前は『ある』、今は『ない』」は削除する。
+        //「前は『ない』、今は『ある』」はあらたに保存する。
+        
+        //input_referencesは値の配列、一方before_URLsは「アイテムモデル」の配列(ややこしい)
+        //そのため、before_URLsを値の配列に変換する
+        $before_references = array();
+        
+        foreach($before_URLs['references'] as $reference)
+        {
+            $before_references[] = $reference->URL;
+        }
+        
+        /**
+         * このforeachでやること：前にあったけど今ないやつを削除する。
+         * 
+         * array_diff(前回のURL配列 - 今回のURL配列(input) = 「前回」はあったけど今回はなくなったURL)
+         */
+        foreach(array_diff($before_references, $input_references) as $deleted_reference)
+        {
+            //getだとコレクションになってしまう
+            $deleted_reference = Item::where('URL', $deleted_URL)->first();
+            //dd($deleted_reference);
+            $deleted_reference->Posts()->detach($post->id);
+        }
+        
+        /**
+         * このforeachでやること：前なかったやつを登録する。
+         * 
+         * Itemsに登録されて「ない」ときは、Itemsに登録、関係も登録(中間テーブル)。
+         * Itemsに登録されて「いる」ときは、関係だけ登録。
+         * 
+         * array_diff(今回のURL配列(input) - 前回のURL配列 = 前回はなかったけど「今回」はあるURL)
+         */
+        foreach(array_diff($input_references, $before_references) as $new_reference)
+        {
+            //空欄の値を持ってきてないか
+            if($new_reference !== null)
+            {
+                //URLはすでにItemテーブルに登録されているか？
+                if(!Item::where('URL', $new_reference)->exists())
+                {
+                    //保存。fillだと一個しか登録できない
+                    //dd($new_URL);
+                    Item::create(['URL'=>$new_reference]);
+                }
+                
+                //中間テーブルに保存
+                    //まずitemのidをとってくる。
+                    //もしも複数同じものがあった時エラーを起こさない用firstメソッド
+                    //attachはダブりあり、syncは同じidの結びつきは一個だけ
+                    $ref_withid = Item::where('URL', $new_reference)->first();
+                    //itemに結びついたpostのidを呼んで、入れてsyncで保存
+                    DB::table('item_post')->insert([
+                    'item_id' => $ref_withid->id,
+                    'post_id' => $post->id,
+                    'type' => "ref",
+                    ]);
+            }
+        }
+    }
+    
+    /**
+     * 該当ポストで、アイテムテーブルに保存されているURLはどのような扱いなのか確認する
+     * たとえば同じURLでも、投稿Aでは「アイテム」、投稿Bでは「参考サイト」扱いしてるかも
+     * それを区別するために、中間テーブルに保存したtypeから復元する作業をする
+     * 
+     * 返り値 : $search_URLs(['items'=>$items, 'references'=>$references])
+     */
+    public static function pass_converted_URLs(Post $post)
+    {
+        //dd($post);
+        
+        $items = array();
+        $references = array();
+        
+        //URLをよぶ
+        $URLs = $post->items;
+        
+        //dd($URLs);
+        
+        foreach($URLs as $URL)
+        {
+            //ポストに結びついたものを持ってきているわけなので、
+            //中間テーブルで該当のURLで検索する
+            //そうして、該当のURLはポストの中でitem/refどちらで使われているか判別
+            $type_checker = DB::table('item_post')->where('item_id', $URL->id)->first();
+            
+            //使用アイテムだった場合
+            if($type_checker->type === 'item')
+            {
+                $items[] = $URL;
+            }
+            //参考サイトだった場合
+            elseif($type_checker->type === 'ref')
+            {
+                $references[] = $URL;
+            }
+        }
+        
+        //return用に変換
+        $search_URLs = [
+            'items' => $items,
+            'references' => $references
+            ];
+        
+        //dd($search_URLs);
+        
+        return $search_URLs;
+    }
 }

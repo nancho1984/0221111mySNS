@@ -10,9 +10,7 @@
             <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
         </head>
         <body>
-            <h1>Kitemite</h1>
-            
-            <!--検索フォーム-->
+            <!--検索フォーム　あとでナビバーに-->
             <form method="GET" action="{{ route('searchbar_posts') }}">
                 <input type="search" placeholder="コーデを検索" name="search_posts" value="@if (isset($search)) {{ $search }} @endif">
                 <div>
@@ -21,68 +19,45 @@
             </form>
             
             @auth
-            <!--通知機能仮置き、完成品ではヘッダーにだしてほしい
-                ログインしてるときのみ表示-->
-                <div class='notification'>
-                    @if($number_notices == true)
-                    <p>{{ $number_notices }}件の通知があります</p>
-                    <a href="{{ route('show_notices', $user->id) }}">詳しく見る</a>
-                    @endif
-                </div>
-            
                 <a href="/posts/create">新規投稿</a>
-                <a href="/users/ {{$user->id}}">マイページ</a>
+                <a href="/users/ {{$auth_user->id}}">マイページ</a>
             @else
             <!--ログインして「ない」とき-->
                 <a href="/register">新規登録</a>
                 <a href="/login">ログイン</a>
             @endauth
             
-            <div class='new_posts'>
-                <h2>新着</h2>
-                <div class="max-w-screen-2xl px-4 md:px-8 mx-auto">
-                    <div class="flex justify-between items-end gap-4 mb-6">
-                        <!--もっと見るボタン-->
-                        <a href="{{ route('show_new_posts') }}" class="inline-block bg-white hover:bg-gray-100 active:bg-gray-200 focus-visible:ring ring-indigo-300 border text-gray-500 text-sm md:text-base font-semibold text-center rounded-lg outline-none transition duration-100 px-4 md:px-8 py-2 md:py-3">もっと見る</a>
-                    </div>
-                </div>
-                @foreach ($new_posts as $new_post)
-                <div class='new_post'>
-                    <a href="/users/{{ $new_post->user->id }}">{{ $new_post->user->nickname }}</a>
-                    <!-- 画像のサイズ調整すること-->
-                    <div class='image'>
-                        <img src="{{ $new_post->image }}">
-                    </div>
-                </div>
+            <div class="bg-white py-6 sm:py-8 lg:py-12">
+                <div class="max-w-screen-2xl px-8 md:px-8 mx-auto">
+                    <div class="flex flex-wrap grid grid-cols-2 ">
+                        
+                        @auth
+                            <h2>フォロー新着</h2>
+                            <div name="follows_new_posts">
+                                @foreach($follows_new_posts as $follows_new_post)
+                                    <x-post :post="$follows_new_post" />
+                                @endforeach
+                            </div>
+                        @endauth
+                        
+                        <h2>みんなの新着</h2>
+                        <div name="new_posts">
+                            @foreach($new_posts as $new_post)
+                                <x-post :post="$new_post" />
+                            @endforeach
+                        </div>
                 
-                <!--likeボタン-->
-                <span>
-                    <!-- もし$likeがあれば＝ユーザーが「いいね」をしていたら -->
-                    @if($new_post->is_liked_by_auth_user())
-                    
-                        <!-- 「いいね」取消用ボタンを表示 -->
-        	            <a href="{{ route('unlike', $new_post) }}" class="btn btn-success btn-sm">
-    	    	            いいね
-        		            <!-- 「いいね」の数を表示 -->
-    	                    <span class="badge">
-    	    		        {{ $new_post->likes->count() }}
-    	    	            </span>
-    	                </a>
-                    
-                    <!-- まだユーザーが「いいね」をしていなければ、「いいね」ボタンを表示 -->
-                    @else
-        	            <a href="{{ route('like', $new_post) }}" class="btn btn-secondary btn-sm">
-        		            いいね
-        		            <!-- 「いいね」の数を表示 -->
-                    		<span class="badge">
-        	    	    	{{ $new_post->likes->count() }}
-        	              	</span>
-                    	</a>
-                    @endif
-                </span>
-                <a href="/posts/{{ $new_post->id }}">詳しく見る</a>
-                @endforeach
+                        <h2>人気の投稿</h2>
+                        <div name="popular_posts">
+                            @foreach($popular_posts as $popular_post)
+                                <x-post :post="$popular_post" />
+                            @endforeach
+                        </div>
+                        
+                    </div>
+                </div>
             </div>
+            
         </body>
     </html>
 </x-app-layout>
