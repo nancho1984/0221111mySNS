@@ -13,17 +13,22 @@ class UserController extends Controller
 {
     public function showProfile(User $user)
     {
-        $posts = $user->posts()->paginate(10);
-        $likes = $user->likes()->paginate(10);
-        $followusers_count = count(Follow::where('following_user_id', $user->id)->get());
-        $followers_count = count(Follow::where('followed_user_id', $user->id)->get());
+        $users_posts = Post::where('user_id', $user->id)
+                    ->orderBy('created_at', 'DESC')
+                    ->take(3)
+                    ->get();
+        
+        //1.ユーザーのいいねをかき集める
+        //2.いいね先の投稿のidだけで配列にする
+        //3.投稿のidをまとめて取得していく
+        $likes = Like::where('user_id', $user->id)->get;
+        $like_ids = $likes->pluck('post_id')->toArray();
+        $liked_posts = Post::whereIn('id', $like_ids);
         
         return view('profile')->with([
             'user' => $user, 
-            'posts' => $posts,
-            'likes' => $likes,
-            'followusers_count' => $followusers_count,
-            'followers_count' => $followers_count,
+            'users_posts' => $users_posts,
+            'liked_posts' => $liked_posts,
             ]);
     }
 

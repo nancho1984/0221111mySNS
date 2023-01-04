@@ -15,7 +15,8 @@ class Item extends Model
     //入力可能なカラムの指定
     protected $fillable = [
         'URL',
-        'thumnail',
+        'og_title',
+        'og_image',
     ];
     
     //Postsに対するリレーション, items:posts =>多:多

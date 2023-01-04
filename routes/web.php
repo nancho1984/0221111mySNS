@@ -78,6 +78,10 @@ Route::get('/posts/user={user}', [PostController::class, 'showUsersPosts'])->nam
 Route::get('/posts/{post}', [PostController::class, 'showPost'])->name('show_post');
 //「ポスト」テーブルの中身で検索する
 Route::get('/search/index/posts', [PostController::class, 'searchbarPosts'])->name('searchbar_posts');
+//月間で人気の投稿を見る画面
+Route::get('/posts/popular/month', [PostController::class, 'showMonthPopularPosts'])->name('show_month_popular_posts');
+//すべての期間で人気の投稿を見る画面
+Route::get('/posts/popular/entire', [PostController::class, 'showEntirePopularPosts'])->name('show_entire_popular_posts');
 
 //[アイテム]
 //投稿に結びついたURLから、他の同一のURLが結びついている投稿を見る

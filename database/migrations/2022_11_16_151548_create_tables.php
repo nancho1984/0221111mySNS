@@ -48,7 +48,9 @@ return new class extends Migration
         Schema::create('items', function (Blueprint $table) {
             $table->id();
             $table->string('URL', 500)->unique();
-            $table->string('thumnail')->nullable();
+            //OGPの情報を補完するカラム
+            $table->string('og_image', 500)->nullable();
+            $table->string('og_title' ,500)->nullable();
             //タイムスタンプをつけようとした。消してもいいっちゃいい
             $table->timestamps();
             $table->softDeletes();
@@ -56,7 +58,8 @@ return new class extends Migration
             //検索用インデックス
             $table->index('id');
             $table->index('URL');
-            $table->index('thumnail');
+            $table->index('og_image');
+            $table->index('og_title');
         });
      
     

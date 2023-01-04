@@ -22,10 +22,10 @@ class DatabaseSeeder extends Seeder
         //]);
         
         //ユーザーを作りたいとき
-        //$this->call(UserSeeder::class);
+        $this->call(UserSeeder::class);
         
         //アイテムを作る
-        //$this->call(ItemSeeder::class);
+        $this->call(ItemSeeder::class);
         
         //投稿を作りたいとき
         $this->call(PostSeeder::class);

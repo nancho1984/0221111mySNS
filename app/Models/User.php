@@ -77,6 +77,20 @@ class User extends Authenticatable
         return $this->hasMany(Follow::class);
     }
     
+    //該当ユーザーがフォローしているユーザー
+    public function following_users()
+    {
+        $following_users = Follow::where('following_user_id', $this->id)->get();
+        return $following_users;
+    }
+    
+    //該当ユーザーのフォロワー
+    public function followers()
+    {
+        $followers = Follow::where('followed_user_id', $this->id)->get();
+        return $followers;
+    }
+    
     //ユーザーが自分をフォローしないための本人確認チェック
     public function they_isnt_auth_user()
     {

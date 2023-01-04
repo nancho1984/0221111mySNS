@@ -10,6 +10,9 @@ module.exports = {
 
     theme: {
         extend: {
+            aspectRatio: {
+                '3/4': '3 / 4',
+            },
             fontFamily: {
                 sans: ['Nunito', ...defaultTheme.fontFamily.sans],
             },

@@ -81,30 +81,30 @@
                         <div class="items">
                             <h2>使用アイテム</h2>
                             @foreach ($items as $item)
-                                <?php
-                                    $dom = new DOMDocument('1.0', 'UTF-8');
-                                    $html = file_get_contents( $item->URL );//データを抽出したいURLを入力
-                                    @$dom->loadHTML($html);
-                                    $xpath = new DOMXpath($dom);
-                                    echo $xpath->query("//title")->item(0)->nodeValue; //タイトルを抽出して出力
-                                ?>
-                                <p>{{ $item->URL }}</p>
-                                <a href="/search/items/{{ $item->id }}">このアイテムを使ったほかのコーデを見る</a>
+                                <a href="{{ $item->URL }}">
+                                    <img src="{{ $item->og_image }}">
+                                    @if($item->og_title !== false)
+                                        <p>{{$item->og_title}}</p>
+                                    @else
+                                        {{ $item->URL }}
+                                    @endif
+                                </a>
+                                <p><a href="/search/items/{{ $item->id }}">このアイテムを使ったほかのコーデを見る</a></p>
                             @endforeach
                         </div>
                         
                         <div class="references">
                             <h2>参考サイト</h2>
                             @foreach ($references as $reference)
-                                <?php
-                                    $dom = new DOMDocument('1.0', 'UTF-8');
-                                    $html = file_get_contents( $reference->URL );//データを抽出したいURLを入力
-                                    @$dom->loadHTML($html);
-                                    $xpath = new DOMXpath($dom);
-                                    echo $xpath->query("//title")->item(0)->nodeValue; //タイトルを抽出して出力
-                                ?>
-                                <p>{{ $reference->URL }}</p>
-                                <a href="/search/items/{{ $reference->id }}">このアイテムを使ったほかのコーデを見る</a>
+                                <a href="{{ $reference->URL }}">
+                                    <img src="{{ $reference->og_image }}">
+                                    @if($reference->og_title !== false)
+                                        <p>{{$reference->og_title}}</p>
+                                    @else
+                                        {{ $reference->URL }}
+                                    @endif
+                                </a>
+                                <p><a href="/search/items/{{ $reference->id }}">このアイテムを使ったほかのコーデを見る</a></p>
                             @endforeach
                         </div>
                     </div>

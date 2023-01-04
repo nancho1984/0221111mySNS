@@ -3,8 +3,4 @@
         <x-post :post="$post" />
     @endforeach
 </div>
-
-
-<div name='paginate'>
-    {{ $posts->links() }}
-</div>
+    

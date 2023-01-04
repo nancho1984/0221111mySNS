@@ -10,6 +10,52 @@ use Illuminate\Support\Facades\DB;
 
 class ItemController extends Controller
 {
+    public static function get_ogps($URL)
+    {
+        $ogps = array();
+        
+        //URL先のHTML要素を持ってくる
+        $html = mb_convert_encoding(file_get_contents($URL), "utf-8", "auto");
+        
+        //タイトルを検索
+        if(preg_match('<meta property="og:title" content="(.*?)">', $html, $ogp_result))
+        {
+            //あるときは数字、ないときはfalseが返ってくる
+            $og_title = $ogp_result[1];
+        }
+        else
+        {
+            $og_title = false;
+        }
+        
+        //画像を検索.*は任意の文字が続くことのワイルドカードの表現
+        //twitter用の画像の方が正方形だったり何かと便利そうなのでとってくる
+        if(preg_match('<meta name="twitter:image" content="(.*)">', $html, $ogp_result))
+        {
+            //あるときは数字、ないときはfalseが返ってくる
+            $og_image = $ogp_result[1];
+        }
+        else
+        {
+            //もしtwitter:imageがなかったとき
+            if(preg_match('<meta property="og:image" content="(.*)">', $html, $ogp_result))
+            {
+                $og_image = $ogp_result[1];
+            }
+            else
+            {
+                $og_image = false;
+            }
+        }
+        
+        return $ogps = [
+            'og_image' => $og_image,
+            'og_title' => $og_title,
+            ];
+    
+    return false;
+    }
+    
     public static function store_items($input_items, $post)
     {
         //インプット内のそれぞれのURLに対して作業
@@ -20,8 +66,16 @@ class ItemController extends Controller
                 //URLの重複チェック。すでにある時は保存しない
                 if (!Item::where('URL', $item)->exists())
                 {
+                    //URLからogp取得
+                    $ogps = ItemController::get_ogps($item);
+                    //dd($ogps['og_title']);
+                    
                     //保存。fillだと一個しか登録できない
-                    Item::create(['URL'=>$item]);
+                    Item::create([
+                        'URL' => $item,
+                        'og_title' => $ogps['og_title'],
+                        'og_image' => $ogps['og_image'],
+                    ]);
                 }
                 
                 //中間テーブルに保存
@@ -49,9 +103,14 @@ class ItemController extends Controller
                 //URLの重複チェック。すでにある時は保存しない
                 if (!Item::where('URL', $reference)->exists())
                 {
+                    //URLからogp取得
+                    $ogps = ItemController::get_ogps($reference);
+                    
                     //保存。fillだと一個しか登録できない
                     Item::create([
-                        'URL'=>$reference,
+                        'URL' => $reference,
+                        'og_title' => $ogps['og_title'],
+                        'og_image' => $ogps['og_image'],
                     ]);
                 }
         
@@ -119,9 +178,15 @@ class ItemController extends Controller
                 //URLはすでにItemテーブルに登録されているか？
                 if(!Item::where('URL', $new_item)->exists())
                 {
+                    //URLからogp取得
+                    $ogps = ItemController::get_ogps($new_item);
+                    
                     //保存。fillだと一個しか登録できない
-                    //dd($new_URL);
-                    Item::create(['URL'=>$new_item]);
+                    Item::create([
+                        'URL' => $new_item,
+                        'og_title' => $ogps['og_title'],
+                        'og_image' => $ogps['og_image'],
+                    ]);
                 }
                 
                 //中間テーブルに保存
@@ -186,9 +251,15 @@ class ItemController extends Controller
                 //URLはすでにItemテーブルに登録されているか？
                 if(!Item::where('URL', $new_reference)->exists())
                 {
+                    //URLからogp取得
+                    $ogps = ItemController::get_ogps($new_reference);
+                    
                     //保存。fillだと一個しか登録できない
-                    //dd($new_URL);
-                    Item::create(['URL'=>$new_reference]);
+                    Item::create([
+                        'URL' => $new_reference,
+                        'og_title' => $ogps['og_title'],
+                        'og_image' => $ogps['og_image'],
+                    ]);
                 }
                 
                 //中間テーブルに保存

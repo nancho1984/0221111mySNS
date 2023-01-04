@@ -45,7 +45,7 @@ class PostController extends Controller
         //ログインしてるか確認
         if($auth_user !== null)
         {
-            $follows_new_posts = FollowController::get_follows_new_posts($auth_user, $limit_count);
+            $follows_new_posts = FollowController::get_follows_posts($auth_user, $limit_count);
             //dd($follows_new_posts);
         }
         else
@@ -115,6 +115,34 @@ class PostController extends Controller
             ));
     }
     
+    //1か月の間で人気だった投稿をもっていく関数
+    //ページネートせず、30個だけ持ってくる
+    public function showMonthPopularPosts(Post $post, User $user)
+    {
+        $user = Auth::user();
+        
+        $month_popular_posts = $post->get_aMonth_popular_posts(30);
+        
+        return view('show_month_popular_posts',compact(
+            'user',
+            'month_popular_posts',
+            ));
+    }
+    
+    //すべての期間を通して人気だった投稿をもっていく関数
+    //ページネートせず、30個だけ持ってくる
+    public function showEntirePopularPosts(Post $post, User $user)
+    {
+        $user = Auth::user();
+        
+        $entire_popular_posts = $post->get_Entire_popular_posts(30);
+        
+        return view('show_entire_popular_posts',compact(
+            'user',
+            'entire_popular_posts',
+            ));
+    }
+    
     public function showNewPosts(Post $post, User $user)
     {
         //blade内で使う変数'posts'と設定。'posts'の中身にgetを使い、インスタンス化した$postを代入。
@@ -136,21 +164,12 @@ class PostController extends Controller
     
     public function showUsersPosts(Post $post, User $user)
     {
-        $post = $user->posts()->paginate(10);
+        $post = $user->posts()->paginate(30);
         //->orderBy('created_at', 'DESC')->paginate(10)->get();
-        
-        if($user != NULL)
-        {
-            //その人本人が「いいね」押してるか検索
-            $like=Like::where('post_id', $post->id)->where('user_id', auth()->user()->id)->first();
-            //dd($like);
-            
-        }
         
         return view('show_userspost')->with([
             'posts' => $post,
             'user' => $user,
-            'like' => $like,
             ]);
     }
     
