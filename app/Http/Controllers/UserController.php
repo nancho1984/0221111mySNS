@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\ProfileRequest;
 use App\Models\Follow;
 use App\Models\Post;
+use App\Models\Like;
 use App\Models\User;
 use Cloudinary;
 
@@ -21,9 +22,9 @@ class UserController extends Controller
         //1.ユーザーのいいねをかき集める
         //2.いいね先の投稿のidだけで配列にする
         //3.投稿のidをまとめて取得していく
-        $likes = Like::where('user_id', $user->id)->get;
+        $likes = Like::where('user_id', $user->id)->get();
         $like_ids = $likes->pluck('post_id')->toArray();
-        $liked_posts = Post::whereIn('id', $like_ids);
+        $liked_posts = Post::whereIn('id', $like_ids)->take(3)->get();
         
         return view('profile')->with([
             'user' => $user, 

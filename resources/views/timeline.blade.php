@@ -7,12 +7,7 @@
                 <div class="max-w-screen-2xl px-8 md:px-8 mx-auto">
                         
                         <!--検索フォーム　あとでナビバーに-->
-                    <div class="py-4">
-                        <form method="GET" action="{{ route('searchbar_posts') }}">
-                            <input type="search" placeholder="コーデを検索" name="search_posts" value="@if (isset($search)) {{ $search }} @endif">
-                            <button type="submit">検索</button>
-                        </form>
-                    </div>    
+                    
                         
                     <div class="py-4">
                         @auth

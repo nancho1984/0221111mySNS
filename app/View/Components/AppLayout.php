@@ -33,6 +33,7 @@ class AppLayout extends Component
         //dd($notifications);
         
         return view('layouts.app',compact(
+            'user',
             'number_notices',
             ));
     }
