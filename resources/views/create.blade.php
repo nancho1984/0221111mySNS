@@ -1,13 +1,7 @@
 <!DOCTYPE html>
+<x-app-layout>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <title>Kitemite</title>
-        <!-- Fonts -->
-        <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
-    </head>
-    <body>
-        <h1>kitemite</h1>
+    <body class="max-w-screen-2xl px-4 md:px-8 mx-auto">
         <h2>新規投稿</h2>
         <!--エラー文-->
         @if ($errors->any())
@@ -22,7 +16,7 @@
         
         <form action="/posts" method="POST" enctype="multipart/form-data">
             @csrf
-            <!--ここのエラー治ったらプロフ画像も直して-->
+            <p>画像</p>
             <div class="image">
                 
                 <input 
@@ -68,3 +62,4 @@
         </div>
     </body>
 </html>
+</x-app-layout>

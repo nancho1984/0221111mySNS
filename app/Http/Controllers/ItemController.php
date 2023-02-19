@@ -154,7 +154,7 @@ class ItemController extends Controller
          * 
          * array_diff(前回のURL配列 - 今回のURL配列(input) = 「前回」はあったけど今回はなくなったURL)
          */
-        foreach(array_diff($before_items, $input_items) as $deleted_item)
+        foreach(array_diff($before_items, $input_items) as $deleted_URL)
         {
             //getだとコレクションになってしまう
             $deleted_item = Item::where('URL', $deleted_URL)->first();
@@ -227,7 +227,7 @@ class ItemController extends Controller
          * 
          * array_diff(前回のURL配列 - 今回のURL配列(input) = 「前回」はあったけど今回はなくなったURL)
          */
-        foreach(array_diff($before_references, $input_references) as $deleted_reference)
+        foreach(array_diff($before_references, $input_references) as $deleted_URL)
         {
             //getだとコレクションになってしまう
             $deleted_reference = Item::where('URL', $deleted_URL)->first();

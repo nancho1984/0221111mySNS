@@ -65,6 +65,9 @@ Route::group(['middleware' => ['auth']], function(){
  * --------------------------
  */
  
+ 
+Route::get('/test/{post}', [PostController::class, 'test2']);
+
 //[ポスト]
 //トップ画面
 Route::get('/', [PostController::class, 'showTop'])->name('top');
@@ -99,6 +102,8 @@ Route::get('/users/{user}', [UserController::class, 'showProfile'])->name('show_
 //「ユーザー」テーブルの中身で検索する
 Route::get('/search/index/users', [UserController::class, 'searchbarUsers'])->name('searchbar_users');
 
+//検索バーテスト
+Route::get('/test', [UserController::class, 'test']);
 
 //上のバー
 Route::get('/dashboard', function () {

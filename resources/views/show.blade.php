@@ -1,206 +1,128 @@
 <x-app-layout>
-    <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-        <body>
-            <h3 class="username">
-                <a href="/users/{{ $writer_user->id }}">{{ $writer_user->nickname }}</a>
-            </h3>
-            
-            @auth
-                <!--followボタン-->
-                <span>
-                    <!-- 見ているユーザーが投稿者「ではない」ことを確認 -->
-                    @if($writer_user->they_isnt_auth_user())
-                        <!--本人「ではない」とき-->
-                        <!-- 見ているユーザーが、投稿をしたユーザーを「フォロー」していたら -->
-                        @if($writer_user->is_followed_by_auth_user())
-                            <!-- 「フォロー」取消用ボタンを表示 -->
-                            <a href="{{ route('unfollow', $writer_user) }}" class="btn btn-success btn-sm">
-                            フォロー解除
-	                        </a>
-
-                            <!-- まだユーザーが「フォロー」をしていなければ、ボタンを表示 -->
-                        @else
-            	            <a href="{{ route('follow', $writer_user) }}" class="btn btn-secondary btn-sm">
-        	    	            フォロー
-                        	</a>
-                        @endif
-                    @endif
-                </span>
-            
-                <!--likeボタン-->
-                <span>
-                    <!-- ユーザーが「いいね」をしていたら -->
-                    @if($post->is_liked_by_auth_user())
-
-                        <!-- 「いいね」取消用ボタンを表示 -->
-                        <a href="{{ route('unlike', $post) }}" class="btn btn-success btn-sm">
-                            いいね
-                            <!-- 「いいね」の数を表示 -->
-                            <span class="badge">
-                                {{ $post->likes->count() }}
-                            </span>
-	                    </a>
-
-                    <!-- まだユーザーが「いいね」をしていなければ、「いいね」ボタンを表示 -->
-                    @else
-                        <a href="{{ route('like', $post) }}" class="btn btn-secondary btn-sm">
-                            いいね
-    		                <!-- 「いいね」の数を表示 -->
-                    		<span class="badge">
-                    		    {{ $post->likes->count() }}
-                            </span>
-                    	</a>
-                    @endif
-                </span>
-                
-                <!-- 見ているユーザーが投稿者本人で「ある」か確認 -->
-                @if(!($writer_user->they_isnt_auth_user()))
-                    <div class="edit">
-                        <a href="/posts/{{ $post->id }}/edit">編集する</a>
-                    </div>
-
-                    <form action="/posts/{{ $post->id }}" id="form_{{ $post->id }}" method="post">
-                        @csrf
-                        @method('DELETE')
-                        <button type="button" onclick="deletePost({{ $post->id }})">この投稿を削除する</button> 
-                    </form>
-                @endif
-            @endauth
-        
-            <div class="content">
-                <div class="content_post">
-                
-                    <!--画像のサイズ調整すること-->
-                    <div class='image'>
-                        <img src="{{ $post->image }}">
-                    </div>
-                    
-                    <div>
-                        <!--Itemを表示する-->
-                        <div class="items">
-                            <h2>使用アイテム</h2>
-                            @foreach ($items as $item)
-                                <a href="{{ $item->URL }}">
-                                    <img src="{{ $item->og_image }}">
-                                    @if($item->og_title !== false)
-                                        <p>{{$item->og_title}}</p>
-                                    @else
-                                        {{ $item->URL }}
-                                    @endif
-                                </a>
-                                <p><a href="/search/items/{{ $item->id }}">このアイテムを使ったほかのコーデを見る</a></p>
-                            @endforeach
-                        </div>
-                        
-                        <div class="references">
-                            <h2>参考サイト</h2>
-                            @foreach ($references as $reference)
-                                <a href="{{ $reference->URL }}">
-                                    <img src="{{ $reference->og_image }}">
-                                    @if($reference->og_title !== false)
-                                        <p>{{$reference->og_title}}</p>
-                                    @else
-                                        {{ $reference->URL }}
-                                    @endif
-                                </a>
-                                <p><a href="/search/items/{{ $reference->id }}">このアイテムを使ったほかのコーデを見る</a></p>
-                            @endforeach
-                        </div>
-                    </div>
-                
-                
-                    <p class='body'>{{ $post->body }}</p>
-                    <div class='tags'>
-                        <p style="display:inline">タグ</p>
-                        <p style="display:inline">{{ $post->tag1 }}</p>
-                        <p style="display:inline">　{{ $post->tag2 }}</p>
-                        <p style="display:inline">　{{ $post->tag3 }}</p>
-                        <p style="display:inline">　{{ $post->tag4 }}</p>
-                        <p style="display:inline">　{{ $post->tag5 }}</p>
-                    </div>
-                </div>
+<div>
+  
+</div>
+<div class="bg-white py-6 sm:py-8 lg:py-12">
+  <div class="max-w-screen-xl px-4 md:px-8 mx-auto">
+    <div class="grid md:grid-cols-2 gap-8">
+      <!-- images - start -->
+      <div class="grid gap-4">
+        <div class="inline-flex">
+          <a href="{{ route('show_Profile', $post->user->id)}}" class="text-gray-800 hover:text-gray-500 lg:text-lg font-bold transition duration-100">
+            <div class="inline-flex">
+              <span class="mr-6 inline-flex">
+                <img class="w-8 h-8 rounded-full border" alt="*" src="{{ $post->user->image }}">
+                <p class="ml-3 pt-1">{{ $post->user->nickname }}</p>
+              </span>
+              <x-show-button-follow :user="$writer_user" />
             </div>
+          </a>
         
-            <!--投稿に対する返信フォーム-->
-            <div class= "ReplyToPost">
-                <!--button id="btn">この投稿に返信する</button-->
-            
-                <!--以下は押されたら出る"hidden属性"-->
-                <div id="RTP_Form" class="hidden">
-                   <form action="{{ route('replyPost', $post) }}" method="POST">
-                        @csrf
-                        <div>
-                            <textarea name="comment[body]" placeholder="200文字まで"></textarea>
-                            <p class="body__error" style="color:red">{{ $errors->first('comment.body') }}</p>
-                        </div>
-                        <input type="submit" value="送信"/>
-                    </form>
-                </div>
-            
+          <!-- edit buttons - start -->
+          @auth
+            @if(!$writer_user->they_isnt_auth_user())
+            <div class="flex gap-2.5">
+              <a href="/posts/{{ $post->id }}/edit" class="inline-block flex-1 sm:flex-none bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 focus-visible:ring ring-indigo-300 text-white text-sm md:text-base font-semibold text-center rounded-full outline-none transition duration-100 px-6 py-2 ">この投稿を編集する</a>
             </div>
+            @endif
+          @endauth
+          <!-- edit buttons - end -->
+        </div>
         
         
-            <!--コメント表示-->
-            <div class="comments">
-                <h2>コメント</h2>
-                <!--コメントは存在するか-->
-                @if($comments)
-    
-                    @foreach ($comments as $comment)
-                        <p>{{ $comment->user->nickname }}</p>
-                    
-                        <!--リプライとなっているか-->
-                        @if($comment->reply_user_id)
-                            To＠{{ $comment->reply_user->addressname }}
-                        @endif
-                    
+        <div class="lg:col-span-4 aspect-3/4 h-90 w-auto bg-gray-100 rounded-lg overflow-hidden relative">
+          <img src="{{ $post->image }}" loading="lazy" alt="Photo" class="w-full h-full object-cover object-center" />
+        </div>
+        
+        <!-- like - start -->
+        <div class="flex items-center gap-3 mb-6 md:mb-10">
+          <x-show-button-like :post="$post" />
+        </div>
+        <!-- like - end -->
+        
+        <!-- explanation - start -->
+        <span class="inline-block text-gray-600 text-lg md:text-base font-semibold mt-3 sm:mt-4">説明</span>
+        <div class="bg-gray-100 rounded-lg relative p-5 pt-8">
+          <div class="mb-2 md:mb-3">
+            <!-- タイトル用　h3 class="text-indigo-500 text-lg md:text-xl font-semibold mb-3">{ $post->title }</h3-->
+            <p class="text-gray-600">{{ $post->body }}</p>
+          </div>
+        </div>
+        <!-- explanation - end -->
+        
+      </div>
+      <!-- images - end -->
+
+      <!-- content - start -->
+      <div class="md:py-2">
+
+        <!-- items - start -->
+        @if(count($items) != 0)
+          <div class="flex flex-col gap-4 md:gap-6 mb-6 sm:mb-8">
+            <span class="inline-block text-gray-600 text-lg md:text-base font-semibold sm:mt-4">使用アイテム</span>
+            <div class="mb-4 md:mb-6">
+              @foreach($items as $item)
+                <x-show-URL :item="$item" />
+              @endforeach
+            </div>
+          </div>
+        @endif
+        <!-- items - end -->
+        
+        <!-- references - start -->
+        @if(count($references) != 0)
+          <div class="flex flex-col gap-4 md:gap-6 mb-6 sm:mb-8">
+            <span class="inline-block text-gray-600 text-lg md:text-base font-semibold mt-3 sm:mt-4">参考にしたサイト</span>
+            <div class="mb-4 md:mb-6">
+              @foreach($references as $reference)
+              <x-show-URL :item="$reference" />
+            @endforeach
+            </div>
+          </div>
+        @endif
+        <!-- references - end -->
+        
+        <!-- comments start-->
+        <div name="comments">
+            <span class="inline-block text-gray-600 text-lg md:text-base font-semibold mt-3 sm:mt-4">コメント</span>
+            
+            <div id="RTP_Form" class="my-2">
+             <form action="{{ route('replyPost', $post) }}" method="POST">
+                  @csrf
+                  <div class="my-2">
+                      <textarea name="comment[body]" rows="4" class="resize-none block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="コメント&#40;200文字まで&#41;"></textarea>
+                      <p class="body__error" style="color:red">{{ $errors->first('comment.body') }}</p>
+                  </div>
+                  <input type="submit" class="bg-blue-600 hover:bg-blue-500 text-white rounded px-4 py-2" value="コメントを送信"/>
+              </form>
+            </div>
+            <!--コメントは存在するか-->
+            <div class="py-4">
+              @if(count($comments) !== 0)
+              <div class=" border rounded-lg py-4">
+                @foreach ($comments as $comment)
+                <div class="inline-flex px-4 py-2">
+                    <span class="mr-6 inline-flex">
+                      <img class="w-8 h-8 rounded-full border" alt="*" src="{{ $comment->user->image }}">
+                      <p class="ml-3 pt-1">{{ $comment->user->nickname }}</p>
+                      <div class="ml-8 mt-1 text-gray-600">
                         {{ $comment->body }}
                         <br>
-                    
-                        <!--投稿に対する返信フォーム-->
-                        <div class= "ReplyToComment">
-                        <!--button id="btn">この投稿に返信する</button-->
+                      </div>
+                    </span>
+                </div>
 
-                            <!--以下は押されたら出る"hidden属性"-->
-                            <div id="RTC_Form" class="hidden">
-                               <form action="{{ route('replyComment', ['post' => $post, 'comment' => $comment]) }}" method="POST">
-                                @csrf
-                                    <div>
-                                        <textarea name="comment[body]" placeholder="200文字まで"></textarea>
-                                        <p class="body__error" style="color:red">{{ $errors->first('comment.body') }}</p>
-                                    </div>
-                                    <input type="submit" value="送信"/>
-                                </form>
-                            </div>
-    
-                            <p>このコメントへの返信</p>
-    
-                        </div>
-                    @endforeach
-                
-                @else
-                    <p>まだコメントはありません</p>
-                
-                @endif
+                @endforeach
+              </div>
+              @else
+                <span class="inline-block text-gray-600 text-lg md:text-base font-semibold mt-3 px-4 sm:mt-4">コメントはまだありません</span>
+              @endif
             </div>
-        
-            <div class="footer">
-                <a href="/">戻る</a>
-            </div>
-        
-            <!--削除用スクリプト-->
-            <script>
-                function deletePost(id) {
-                    //use strict最新版で動かす宣言
-                    'use strict'
-
-                    if (confirm('削除すると復元できません。\n本当に削除しますか？')) {
-                        //document:ブラウザで表示されたドキュメントを操作できる
-                        document.getElementById(`form_${id}`).submit();
-                    }
-                }
-            </script>
-        
-        </body>
-    </html>
+        </div>
+        <!-- comments end -->
+      </div>
+      <!-- content - end -->
+    </div>
+  </div>
+</div>
 </x-app-layout>

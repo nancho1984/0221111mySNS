@@ -12,6 +12,11 @@ use Cloudinary;
 
 class UserController extends Controller
 {
+    public function test()
+    {
+        return view('test');
+    }
+    
     public function showProfile(User $user)
     {
         $users_posts = Post::where('user_id', $user->id)

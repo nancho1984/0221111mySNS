@@ -26,6 +26,11 @@ class CommentController extends Controller
     //Postに対する返信
     public function replyPost(Request $request, Post $post, Comment $comment)
     {
+        if($request['comment']['body'] === null)
+        {
+            return back();
+        }
+        //dd($request['comment']);
         $input = $request['comment'];
         
         $comment->user_id = auth()->id();

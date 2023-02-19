@@ -5,7 +5,7 @@
         @if($user->is_followed_by_auth_user())
                 
             <!-- 「フォロー」取消用ボタンを表示 -->
-           <a href="{{ route('unfollow', $user) }}" class="bg-blue-600 hover:bg-blue-500 text-white rounded px-4 py-2">フォロー済</a>
+           <a href="{{ route('unfollow', $user) }}" class="bg-blue-600 hover:bg-blue-500 text-white rounded px-4 py-2">フォロー中</a>
                 
         <!-- まだユーザーが「フォロー」をしていなければ、ボタンを表示 -->
         @else
