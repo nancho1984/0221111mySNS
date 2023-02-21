@@ -23,27 +23,18 @@ class PostController extends Controller
 {
     public function test2(Post $post)
     {
-        //フォローに使う用、投稿したユーザーのデータ
-        $writer_user = User::where('id', $post->user_id)->first();
-        $reader_user = Auth::user();
-        //dd($reader_user);
-        
         $search_URLs = ItemController::pass_converted_URLs($post);
         
-        //dd($search_URLs);
-        
-        //postモデルのcommentsメソッドでコメント呼び出し
-        $comments = $post->comments;
-        //dd($comments);
+        $count_references = count($search_URLs['references']);
+        $count_items = count($search_URLs['items']);
         
         return view('test2')->with([
             'post' => $post,
-            'writer_user' => $writer_user,
-            'reader_user' => $reader_user,
-            'comments' => $comments,
             'items' => $search_URLs['items'],
             'references' => $search_URLs['references'],
-        ]);
+            'count_items' => $count_items,
+            'count_references' => $count_references,
+            ]);
     }
     
     public function showTop(Post $post, User $user)

@@ -19,24 +19,33 @@
                 </div>
             @endif
         
-            <form action="/posts" method="POST" enctype="multipart/form-data" class="max-w-2xl rounded-lg mx-auto">
+            <form action="/posts/{{ $post->id }}/update" method="POST" enctype="multipart/form-data" class="max-w-2xl rounded-lg mx-auto">
                 @csrf
+                @method('PUT')
                 <div class="flex flex-col gap-4 p-4 md:p-8">
                     <div class="pb-8">
-                        <span class="h-8 w-8 text-white text-sm bg-gray-400 font-semibold inline-flex text-center p-1.5 rounded-full mb-3">
-                            <p class="mx-auto">1</p>
-                        </span>
-                        <label for="image" class="inline-block px-2 text-gray-700 text-lg font-semibold sm:text-st">写真</label>
-                        <span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">必須</span>
-                        
-                        
-                        <img id="preview" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" class="aspect-3/4 h-60 bg-gray-50 text-gray-600 border border-gray-300 w-auto mb-2 rounded-lg mx-auto object-cover object-center">
                         <div>
-                            <img id="old_image" src="{{ $post->image }}" class="aspect-3/4 h-60 bg-gray-50 text-gray-600 border border-gray-300 w-auto mb-2 rounded-lg mx-auto object-cover object-center">
-                            <span class="bg-red-500 text-white text-sm tracking-wider uppercase rounded-br-lg absolute left-0 top-0 px-3 py-1.5">sale</span>
+                            <span class="h-8 w-8 text-white text-sm bg-gray-400 font-semibold inline-flex text-center p-1.5 rounded-full mb-3">
+                            <p class="mx-auto">1</p>
+                            </span>
+                            <label for="image" class="inline-block px-2 text-gray-700 text-lg font-semibold sm:text-st">写真</label>
+                            <span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">必須</span>
                         </div>
                         
-                        <input type="file" name="post[image]" accept=".gif, .jpg, .png" onchange="previewImage(this);" class="w-full bg-gray-50 text-gray-600 border border-gray-300 focus:ring ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2">
+                        <div class="inline-flex flex gap-6 mx-auto">
+                            <div class="relative">
+                                <img id="old_image" src="{{ $post->image }}" class="aspect-3/4 h-60 bg-gray-50 text-gray-600 border border-gray-300 w-auto mb-2 rounded-lg mx-auto object-cover object-center">
+                                <span class="bg-white text-indigo-700 text-base border border-indigo-500 tracking-wider uppercase rounded-tl-lg bg-opacity-50 border-opacity-50 rounded-br-lg absolute left-0 top-0 px-3 py-1.5">編集前</span>
+                            </div>
+                            <svg class="my-auto" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                            <div class="relative">
+                                <img id="preview" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" class="aspect-3/4 h-60 bg-gray-50 text-gray-600 border border-gray-300 w-auto mb-2 rounded-lg mx-auto object-cover object-center">
+                                <span class="bg-indigo-500 text-base text-white tracking-wider uppercase rounded-tl-lg bg-opacity-90 rounded-br-lg absolute left-0 top-0 px-3 py-1.5">編集後</span>
+                            </div>
+                        </div>
+                        
+                        
+                        <input type="file" name="postupdate[image]" accept=".gif, .jpg, .png" onchange="previewImage(this);" class="w-full bg-gray-50 text-gray-600 border border-gray-300 focus:ring ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2">
                         <p class="mt-1 text-sm text-gray-500" id="file_input_help">PNG / JPG / GIF (1MB以内まで)</p>
                     </div>
         
@@ -49,8 +58,12 @@
                             <p class="text-sm text-gray-500 pt-1">&#40;最大10個まで&#41;</p>
                         </span>
                         <div class="items">
-                            @for ($i=0; $i<10; $i++)
-                            <input type="text" name="items[]" value="{{ old('items[$i]') }}" placeholder="https://..." class="mb-3 w-full bg-gray-50 text-gray-700 border border-gray-300 focus:ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2"/><br>
+                            @for ($i=0; $i<$count_items; $i++)
+                            <input type="text" name="items[]" value="{{ $items[$i]->URL }}" placeholder="https://..." class="mb-3 w-full bg-gray-50 text-gray-700 border border-gray-300 focus:ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2" /><br>
+                            @endfor
+                        
+                            @for ($i=$count_items; $i<10; $i++)
+                            <input type="text" name="items[]" value="{{ old('items[$i]') }}" placeholder="https://..." class="mb-3 w-full bg-gray-50 text-gray-700 border border-gray-300 focus:ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2" /><br>
                             @endfor
                         </div>
                     </div>
@@ -65,7 +78,11 @@
                         </span>
                         <p class="text-sm text-gray-500 pb-2 pl-11">参考にしたサイトのURLもあると、他の人も参考にしやすい投稿になります！</p>
                         <div class="references">
-                            @for ($i=0; $i<5; $i++)
+                            @for ($i=0; $i<$count_references; $i++)
+                            <input type="text" name="references[]" value="{{ $references[$i]->URL }}" placeholder="https://..." class="mb-3 w-full bg-gray-50 text-gray-700 border border-gray-300 focus:ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2"/><br>
+                            @endfor
+                        
+                            @for ($i=$count_references; $i<5; $i++)
                             <input type="text" name="references[]" value="{{ old('references[$i]') }}" placeholder="https://..." class="mb-3 w-full bg-gray-50 text-gray-700 border border-gray-300 focus:ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2"/><br>
                             @endfor
                         </div>
@@ -79,24 +96,39 @@
                             <label for="caps" class="inline-block px-2 text-gray-700 text-lg font-semibold sm:text-st">説明</label>
                             <p class="text-sm text-gray-500 pt-1">&#40;最大500字まで&#41;</p>
                         </span>
-                        <textarea id="body" name="post[body]" rows="4" placeholder="制作時のこだわりや、着る際のアドバイスなどがあれば書いてみましょう" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-indigo-300 focus:border-indigo-300">{{ old('post.body')}}</textarea>
+                        <textarea id="body" name="postupdate[body]" rows="4" placeholder="制作時のこだわりや、着る際のアドバイスなどがあれば書いてみましょう" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-indigo-300 focus:border-indigo-300">{{ $post->body }}</textarea>
                     </div>
             
                     <input type="submit" value="保存する" class="block bg-blue-600 hover:bg-blue-500 active:bg-blue-400 focus-visible:ring ring-blue-300 text-white text-sm md:text-base font-semibold text-center rounded-lg outline-none transition duration-100 px-8 py-3"/>
                 </div>
             </form>
             
-            <script>
-            function previewImage(obj)
-            {
-            	var fileReader = new FileReader();
-            	fileReader.onload = (function() {
-            		document.getElementById('preview').src = fileReader.result;
-            	});
-            	fileReader.readAsDataURL(obj.files[0]);
-            }
-            </script>
+            <form action="/posts/{{ $post->id }}" id="form_{{ $post->id }}" method="post" class="mt-10 max-w-2xl mx-auto">
+                @csrf
+                @method('DELETE')
+                <button type="button" onclick="deletePost({{ $post->id }})" class="rounded-lg mx-auto block bg-red-800 hover:bg-red-700 active:bg-red-600 focus-visible:ring ring-red-500 text-white text-sm md:text-base font-semibold text-center rounded-lg outline-none transition duration-100 px-20 py-3">削除する</button> 
+            </form>
             
         </div>
     </div>
+    
+    <script>
+        function previewImage(obj)
+        {
+        	var fileReader = new FileReader();
+        	fileReader.onload = (function() {
+        		document.getElementById('preview').src = fileReader.result;
+        	});
+        	fileReader.readAsDataURL(obj.files[0]);
+        }
+        
+        function deletePost(id) {
+            //use strict最新版で動かす宣言
+            'use strict'
+            if (confirm('削除すると復元できません。\n本当に削除しますか？')) {
+                //document:ブラウザで表示されたドキュメントを操作できる
+                document.getElementById(`form_${id}`).submit();
+            }
+        }
+    </script>
 </x-app-layout>
