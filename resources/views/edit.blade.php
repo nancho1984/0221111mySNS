@@ -7,6 +7,7 @@
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
     </head>
     <body>
+        
         <h1>kitemite</h1>
         <h2>投稿の編集</h2>
         

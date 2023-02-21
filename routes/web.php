@@ -66,7 +66,7 @@ Route::group(['middleware' => ['auth']], function(){
  */
  
  
-Route::get('/test/{post}', [PostController::class, 'test2']);
+Route::get('/test2/{post}', [PostController::class, 'test2']);
 
 //[ポスト]
 //トップ画面
