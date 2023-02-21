@@ -262,45 +262,6 @@ class PostController extends Controller
         
         $post->fill($input_post);
         
-        //タグを保存していく
-        
-        //タグ入力フォームのそれぞれの値を確認
-        foreach($request['tags'] as $tag)
-        {
-            //値がからじゃ「ない」か確認
-            if($tag !== null){
-                //タグ1がまだ「ない」とき
-                if(!$post->tag1)
-                {
-                    //dd($tag);
-                    $post->tag1 = $tag;
-                }
-                //タグ1は「ある」けど、タグ2がまだ「ない」とき
-                elseif(!$post->tag2)
-                {
-                    //dd($tag);
-                    $post->tag2 = $tag;
-                }
-                //タグ2は「ある」けど、タグ3がまだ「ない」とき
-                elseif(!$post->tag3)
-                {
-                    //dd($tag);
-                    $post->tag3 = $tag;
-                }
-                //タグ3は「ある」けど、タグ4がまだ「ない」とき
-                elseif(!$post->tag4)
-                {
-                    //dd($tag);
-                    $post->tag4 = $tag;
-                }
-                //タグ4は「ある」けど、タグ5がまだ「ない」とき
-                elseif(!$post->tag5)
-                {
-                    //dd($tag);
-                    $post->tag5 = $tag;
-                }
-            }
-        }
         
         //dd($post);
         $post->image = Cloudinary::upload($request->file('post.image')->getRealPath())->getSecurePath();
@@ -339,62 +300,6 @@ class PostController extends Controller
         $input_items = array_unique($request['items']);
         $input_references = array_unique($request['references']);
         $before_URLs = ItemController::pass_converted_URLs($post);
-        
-        //[タグの更新・保存]
-        //array_filterは値があるものだけの配列にする
-        //array_valuesでfilterで歯抜けになった番号を付けなおす
-        $input_tags = array_values(array_filter($request['tags']));
-        $tag_counter = count($input_tags);
-        //カラムの使用上、空欄も含めて5個の配列でないといけないので空欄追加
-        for($i = 0; $i < 5-$tag_counter; $i++)
-        {
-            $input_tags[] = null;
-        }
-        //タグを更新していく
-        //問答無用で5回繰り返す
-        //「値がある」ものは前の番号で保存しきって、「値がない」ものは後ろへ
-        for($i = 0; $i < 5; $i++)
-        {
-            //$tag:繰り返しの中で使う便宜的変数
-            $tag = $input_tags[$i];
-            
-            if($i === 0)
-            {
-                //1回目のループ
-                Post::where('id', $post->id)->update([
-                    'tag1' => $tag,
-                    ]);
-            }
-            elseif($i === 1)
-            {
-                //2回目のループ
-                Post::where('id', $post->id)->update([
-                    'tag2' => $tag,
-                    ]);
-            }
-            elseif($i === 2)
-            {
-                //3回目のループ
-                Post::where('id', $post->id)->update([
-                    'tag3' => $tag,
-                    ]);
-            }
-            elseif($i === 3)
-            {
-                //4回目のループ
-                Post::where('id', $post->id)->update([
-                    'tag4' => $tag,
-                    ]);
-            }
-            elseif($i === 4)
-            {
-                //5回目のループ
-                Post::where('id', $post->id)->update([
-                    'tag5' => $tag,
-                    ]);
-            }
-        }
-        //dd(Post::where('id', $post->id)->first());
         
         //[画像の保存]
         $post->fill($input);
